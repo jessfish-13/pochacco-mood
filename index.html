@@ -3,292 +3,189 @@
 <head>
 <meta charset="UTF-8">
 <title>Pochacco Focus 🐾</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Hubballi&display=swap" rel="stylesheet">
 
 <style>
-  body {
-    margin: 0;
-    font-family: 'Hubballi', sans-serif;
-    background: linear-gradient(135deg, #e9fff2, #f4fff9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-
-  .card {
-    background: white;
-    width: 360px;
-    padding: 20px;
-    border-radius: 22px;
-    border: 3px solid #c9f2dc;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-  }
-
-  h1 {
-    text-align: center;
-    color: #4fbf90;
-    margin: 0;
-  }
-
-  .sub {
-    text-align: center;
-    font-size: 13px;
-    color: #7ac7a6;
-    margin-bottom: 10px;
-  }
-
-  button, input, select {
-    font-family: 'Hubballi', sans-serif;
-  }
-
-  input, select {
-    width: 100%;
-    padding: 8px;
-    border-radius: 14px;
-    border: 1px solid #bfead3;
-    margin: 6px 0;
-  }
-
-  button {
-    background: #a8e6c8;
-    border: none;
-    border-radius: 14px;
-    padding: 8px;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background: #8fd9b6;
-  }
-
-  .timer {
-    text-align: center;
-    margin: 12px 0;
-  }
-
-  .time {
-    font-size: 32px;
-    color: #4fbf90;
-  }
-
-  .subject {
-    background: #eafff3;
-    padding: 8px;
-    border-radius: 14px;
-    margin: 6px 0;
-    text-align: center;
-    cursor: pointer;
-  }
-
-  .task {
-    background: #f2fff8;
-    border-radius: 12px;
-    padding: 8px;
-    margin: 6px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .date {
-    font-size: 11px;
-    color: #6fbf9c;
-  }
-
-  .peace {
-    text-align: center;
-    margin-top: 12px;
-  }
-
-  .paws {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 6px;
-  }
-
-  .paw {
-    width: 38px;
-    height: 38px;
-    background: #c9f2dc;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: transform 0.1s ease;
-  }
-
-  .paw:active {
-    transform: scale(0.75);
-  }
-
-  .popup {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.2);
-    display: none;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .popup-box {
-    background: white;
-    padding: 16px;
-    border-radius: 16px;
-    width: 260px;
-    border: 2px solid #c9f2dc;
-  }
+body {
+  margin: 0;
+  font-family: 'Hubballi', sans-serif;
+  background: linear-gradient(135deg, #e9fff2, #f4fff9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.card {
+  background: white;
+  width: 380px;
+  padding: 20px;
+  border-radius: 22px;
+  border: 3px solid #c9f2dc;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  overflow-y: auto;
+  max-height: 90vh;
+}
+h1 { text-align:center; color:#4fbf90; margin:0; }
+.sub { text-align:center; font-size:13px; color:#7ac7a6; margin-bottom:10px; }
+input, textarea, select, button {
+  font-family:'Hubballi',sans-serif;
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+  border-radius:14px;
+  border:1px solid #bfead3;
+}
+button {
+  background:#a8e6c8;
+  border:none;
+  cursor:pointer;
+}
+button:hover { background:#8fd9b6; }
+.subject {
+  background:#eafff3;
+  padding:8px;
+  border-radius:14px;
+  margin:6px 0;
+  text-align:center;
+  cursor:pointer;
+}
+.task {
+  background:#f2fff8;
+  border-radius:12px;
+  padding:8px;
+  margin:6px 0;
+}
+.tag { font-size:11px; color:#4fbf90; margin-right:4px; }
+.pinned {
+  background:#e3fff1;
+  border-left:4px solid #4fbf90;
+  padding:6px;
+  margin:5px 0;
+  font-size:13px;
+}
+.music button { margin-top:4px; }
 </style>
 </head>
 
 <body>
 <div class="card" id="app"></div>
 
-<div class="popup" id="popup">
-  <div class="popup-box">
-    <h3>Add Subject</h3>
-    <input id="subjectName" placeholder="subject name 🍃">
-    <button style="width:100%;" onclick="createSubject()">add</button>
-  </div>
-</div>
-
 <script>
-let subjects = JSON.parse(localStorage.getItem("subjects")) || {};
-
-let time = 1500;
-let timer;
-let sessions = 0;
+let data = JSON.parse(localStorage.getItem("pochacco")) || {};
+let audio = null;
 
 function save() {
-  localStorage.setItem("subjects", JSON.stringify(subjects));
+  localStorage.setItem("pochacco", JSON.stringify(data));
 }
 
-function renderHome() {
-  location.hash = "";
+function home() {
   const app = document.getElementById("app");
   app.innerHTML = `
     <h1>🐾 Pochacco Focus</h1>
     <div class="sub">focus. rest. squish.</div>
 
-    <input placeholder="task name 🍃">
-    <input type="date">
-    <button>add task</button>
+    <button onclick="newSubject()">➕ add subject</button>
+    ${Object.keys(data).map(s=>`<div class="subject" onclick="openSubject('${s}')">${s}</div>`).join("")}
 
-    <div class="timer">
-      <div>25 min focus</div>
-      <div class="time" id="time">${formatTime()}</div>
-      <button onclick="start()">start</button>
-      <button onclick="reset()">reset</button>
-      <div>sessions completed: ${sessions}</div>
-    </div>
-
-    <button onclick="openPopup()">➕ add subject</button>
-    ${Object.keys(subjects).map(s => `
-      <div class="subject" onclick="openSubject('${s}')">${s}</div>
-    `).join("")}
-
-    <select>
-      <option>how do you feel?</option>
-      <option>😊 good</option>
-      <option>😴 tired</option>
-      <option>🥺 low</option>
-      <option>😵 stressed</option>
-    </select>
-
-    <div class="peace">
-      peace corner 🌿
-      <div class="paws">
-        <div class="paw"></div>
-        <div class="paw"></div>
-        <div class="paw"></div>
-      </div>
+    <div class="music">
+      <div class="sub">focus music</div>
+      <button onclick="play('rain')">🌧 rain</button>
+      <button onclick="play('cafe')">☕ cafe</button>
+      <button onclick="play('lofi')">🎶 lofi</button>
+      <button onclick="play('fire')">🔥 campfire</button>
+      <button onclick="stop()">⏹ stop</button>
     </div>
   `;
 }
 
-function openPopup() {
-  document.getElementById("popup").style.display = "flex";
-}
-
-function createSubject() {
-  const name = document.getElementById("subjectName").value.trim();
+function newSubject() {
+  const name = prompt("subject name");
   if (!name) return;
-  subjects[name] = [];
+  data[name] = { tasks: [], notes: "", pins: [] };
   save();
-  document.getElementById("subjectName").value = "";
-  document.getElementById("popup").style.display = "none";
-  renderHome();
+  home();
 }
 
-function openSubject(name) {
-  location.hash = name;
+function openSubject(s) {
+  const subj = data[s];
   const app = document.getElementById("app");
   app.innerHTML = `
-    <h1>${name}</h1>
-    <div class="sub">Upcoming</div>
+    <h1>${s}</h1>
 
-    <input id="taskText" placeholder="task ✨">
+    <div class="sub">pinned</div>
+    ${subj.pins.map(p=>`<div class="pinned">${p}</div>`).join("")}
+    <input id="pinText" placeholder="add pinned note">
+    <button onclick="addPin('${s}')">pin</button>
+
+    <div class="sub">notes</div>
+    <textarea rows="4" oninput="saveNotes('${s}',this.value)">${subj.notes}</textarea>
+
+    <div class="sub">tasks</div>
+    <input id="taskText" placeholder="task + #tags">
     <input type="date" id="taskDate">
-    <button onclick="addTask('${name}')">add task</button>
+    <button onclick="addTask('${s}')">add task</button>
 
-    ${subjects[name].map((t,i)=>`
+    ${subj.tasks.map((t,i)=>`
       <div class="task">
-        <div>
-          ${t.text}
-          ${t.date ? `<div class="date">${t.date}</div>` : ""}
-        </div>
-        <button onclick="deleteTask('${name}',${i})">✖</button>
+        ${t.text}
+        <div>${t.tags.map(tag=>`<span class="tag">#${tag}</span>`).join("")}</div>
+        ${t.date || ""}
+        <button onclick="delTask('${s}',${i})">✖</button>
       </div>
     `).join("")}
 
-    <button style="width:100%;margin-top:8px;" onclick="renderHome()">← back</button>
+    <button onclick="home()">← back</button>
   `;
 }
 
-function addTask(subject) {
+function addPin(s) {
+  const text = document.getElementById("pinText").value;
+  if (!text) return;
+  data[s].pins.push(text);
+  save();
+  openSubject(s);
+}
+
+function saveNotes(s,val) {
+  data[s].notes = val;
+  save();
+}
+
+function addTask(s) {
   const text = document.getElementById("taskText").value;
   const date = document.getElementById("taskDate").value;
   if (!text) return;
-  subjects[subject].push({ text, date });
+  const tags = text.match(/#\w+/g)?.map(t=>t.slice(1)) || [];
+  data[s].tasks.push({ text, date, tags });
   save();
-  openSubject(subject);
+  openSubject(s);
 }
 
-function deleteTask(subject,i) {
-  subjects[subject].splice(i,1);
+function delTask(s,i) {
+  data[s].tasks.splice(i,1);
   save();
-  openSubject(subject);
+  openSubject(s);
 }
 
-function start() {
-  if (timer) return;
-  timer = setInterval(() => {
-    time--;
-    document.getElementById("time").textContent = formatTime();
-    if (time === 0) {
-      clearInterval(timer);
-      timer = null;
-      sessions++;
-      time = 1500;
-      renderHome();
-    }
-  }, 1000);
+function play(type) {
+  stop();
+  const sounds = {
+    rain: "https://cdn.pixabay.com/audio/2022/03/15/audio_0e7a3c8b4f.mp3",
+    cafe: "https://cdn.pixabay.com/audio/2022/02/23/audio_7c2d1f7f63.mp3",
+    lofi: "https://cdn.pixabay.com/audio/2022/03/15/audio_5c5c8d41b5.mp3",
+    fire: "https://cdn.pixabay.com/audio/2021/10/30/audio_8d8c71a1d0.mp3"
+  };
+  audio = new Audio(sounds[type]);
+  audio.loop = true;
+  audio.volume = 0.4;
+  audio.play();
 }
 
-function reset() {
-  clearInterval(timer);
-  timer = null;
-  time = 1500;
-  renderHome();
+function stop() {
+  if (audio) audio.pause();
 }
 
-function formatTime() {
-  const m = Math.floor(time / 60);
-  const s = time % 60;
-  return `${m}:${s.toString().padStart(2,"0")}`;
-}
-
-renderHome();
+home();
 </script>
 </body>
 </html>
