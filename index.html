@@ -17,16 +17,17 @@ body {
 }
 .card {
   background: white;
-  width: 380px;
-  padding: 20px;
+  width: 390px;
+  padding: 18px;
   border-radius: 22px;
   border: 3px solid #c9f2dc;
   box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  max-height: 92vh;
   overflow-y: auto;
-  max-height: 90vh;
 }
 h1 { text-align:center; color:#4fbf90; margin:0; }
 .sub { text-align:center; font-size:13px; color:#7ac7a6; margin-bottom:10px; }
+
 input, textarea, select, button {
   font-family:'Hubballi',sans-serif;
   width:100%;
@@ -41,6 +42,7 @@ button {
   cursor:pointer;
 }
 button:hover { background:#8fd9b6; }
+
 .subject {
   background:#eafff3;
   padding:8px;
@@ -49,20 +51,52 @@ button:hover { background:#8fd9b6; }
   text-align:center;
   cursor:pointer;
 }
+
 .task {
   background:#f2fff8;
   border-radius:12px;
   padding:8px;
   margin:6px 0;
 }
+
 .tag { font-size:11px; color:#4fbf90; margin-right:4px; }
+
 .pinned {
   background:#e3fff1;
   border-left:4px solid #4fbf90;
   padding:6px;
   margin:5px 0;
-  font-size:13px;
 }
+
+.timer {
+  text-align:center;
+  margin:10px 0;
+}
+.time {
+  font-size:32px;
+  color:#4fbf90;
+}
+
+.peace {
+  text-align:center;
+  margin-top:12px;
+}
+.paws {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:6px;
+}
+.paw {
+  width:36px;
+  height:36px;
+  background:#c9f2dc;
+  border-radius:50%;
+  cursor:pointer;
+  transition:transform .1s;
+}
+.paw:active { transform:scale(0.75); }
+
 .music button { margin-top:4px; }
 </style>
 </head>
@@ -74,18 +108,45 @@ button:hover { background:#8fd9b6; }
 let data = JSON.parse(localStorage.getItem("pochacco")) || {};
 let audio = null;
 
+// pomodoro
+let time = 1500;
+let timer = null;
+let sessions = 0;
+
 function save() {
   localStorage.setItem("pochacco", JSON.stringify(data));
 }
 
+// HOME / DASHBOARD
 function home() {
   const app = document.getElementById("app");
   app.innerHTML = `
     <h1>🐾 Pochacco Focus</h1>
     <div class="sub">focus. rest. squish.</div>
 
+    <input id="quickTask" placeholder="quick task + #tags 🍃">
+    <button onclick="addInboxTask()">add task</button>
+
+    <div class="timer">
+      <div>25 min focus</div>
+      <div class="time" id="time">${formatTime()}</div>
+      <button onclick="start()">start</button>
+      <button onclick="reset()">reset</button>
+      <div>sessions completed: ${sessions}</div>
+    </div>
+
     <button onclick="newSubject()">➕ add subject</button>
-    ${Object.keys(data).map(s=>`<div class="subject" onclick="openSubject('${s}')">${s}</div>`).join("")}
+    ${Object.keys(data).map(s=>`
+      <div class="subject" onclick="openSubject('${s}')">${s}</div>
+    `).join("")}
+
+    <select>
+      <option>how do you feel?</option>
+      <option>😊 good</option>
+      <option>😴 tired</option>
+      <option>🥺 low</option>
+      <option>😵 stressed</option>
+    </select>
 
     <div class="music">
       <div class="sub">focus music</div>
@@ -95,17 +156,19 @@ function home() {
       <button onclick="play('fire')">🔥 campfire</button>
       <button onclick="stop()">⏹ stop</button>
     </div>
+
+    <div class="peace">
+      peace corner 🌿
+      <div class="paws">
+        <div class="paw"></div>
+        <div class="paw"></div>
+        <div class="paw"></div>
+      </div>
+    </div>
   `;
 }
 
-function newSubject() {
-  const name = prompt("subject name");
-  if (!name) return;
-  data[name] = { tasks: [], notes: "", pins: [] };
-  save();
-  home();
-}
-
+// SUBJECT PAGE
 function openSubject(s) {
   const subj = data[s];
   const app = document.getElementById("app");
@@ -138,6 +201,15 @@ function openSubject(s) {
   `;
 }
 
+// SUBJECT LOGIC
+function newSubject() {
+  const name = prompt("subject name");
+  if (!name) return;
+  data[name] = { tasks:[], notes:"", pins:[] };
+  save();
+  home();
+}
+
 function addPin(s) {
   const text = document.getElementById("pinText").value;
   if (!text) return;
@@ -146,8 +218,8 @@ function addPin(s) {
   openSubject(s);
 }
 
-function saveNotes(s,val) {
-  data[s].notes = val;
+function saveNotes(s,v) {
+  data[s].notes = v;
   save();
 }
 
@@ -167,20 +239,60 @@ function delTask(s,i) {
   openSubject(s);
 }
 
+// QUICK INBOX TASK
+function addInboxTask() {
+  const text = document.getElementById("quickTask").value;
+  if (!text) return;
+  if (!data["Inbox"]) data["Inbox"] = { tasks:[], notes:"", pins:[] };
+  const tags = text.match(/#\w+/g)?.map(t=>t.slice(1)) || [];
+  data["Inbox"].tasks.push({ text, date:"", tags });
+  save();
+  document.getElementById("quickTask").value = "";
+}
+
+// POMODORO
+function start() {
+  if (timer) return;
+  timer = setInterval(()=>{
+    time--;
+    document.getElementById("time").textContent = formatTime();
+    if (time === 0) {
+      clearInterval(timer);
+      timer = null;
+      sessions++;
+      time = 1500;
+      home();
+    }
+  },1000);
+}
+
+function reset() {
+  clearInterval(timer);
+  timer = null;
+  time = 1500;
+  home();
+}
+
+function formatTime() {
+  const m = Math.floor(time/60);
+  const s = time%60;
+  return `${m}:${s.toString().padStart(2,"0")}`;
+}
+
+// MUSIC
 function play(type) {
   stop();
   const sounds = {
-    rain: "https://cdn.pixabay.com/audio/2022/03/15/audio_0e7a3c8b4f.mp3",
-    cafe: "https://cdn.pixabay.com/audio/2022/02/23/audio_7c2d1f7f63.mp3",
-    lofi: "https://cdn.pixabay.com/audio/2022/03/15/audio_5c5c8d41b5.mp3",
-    fire: "https://cdn.pixabay.com/audio/2021/10/30/audio_8d8c71a1d0.mp3"
+    rain:"https://cdn.pixabay.com/audio/2022/03/15/audio_0e7a3c8b4f.mp3",
+    cafe:"https://cdn.pixabay.com/audio/2022/02/23/audio_7c2d1f7f63.mp3",
+    lofi:"https://cdn.pixabay.com/audio/2022/03/15/audio_5c5c8d41b5.mp3",
+    fire:"https://cdn.pixabay.com/audio/2021/10/30/audio_8d8c71a1d0.mp3"
   };
   audio = new Audio(sounds[type]);
   audio.loop = true;
   audio.volume = 0.4;
   audio.play();
 }
-
 function stop() {
   if (audio) audio.pause();
 }
