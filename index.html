@@ -12,49 +12,18 @@
     body {
       background: linear-gradient(135deg, #e8fff1, #f3fff8);
       font-family: "Hubballi", sans-serif;
-      margin: 0;
-      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-    }
-
-    .app {
-      display: flex;
-      gap: 14px;
-    }
-
-    .calendar {
-      background: white;
-      border-radius: 20px;
-      padding: 14px;
-      width: 180px;
-      border: 3px solid #c9f2dc;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-      text-align: center;
-    }
-
-    .calendar h3 {
-      color: #4fbf90;
-      margin-top: 0;
-      font-size: 18px;
-    }
-
-    .calendar input {
-      width: 100%;
-      padding: 8px;
-      border-radius: 12px;
-      border: 1px solid #bfead3;
-      background: #f7fffb;
-      font-family: "Hubballi", sans-serif;
-      font-size: 14px;
+      height: 100vh;
+      margin: 0;
     }
 
     .card {
       background: white;
       border-radius: 22px;
-      padding: 22px;
-      width: 380px;
+      padding: 25px;
+      width: 400px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.08);
       text-align: center;
       border: 3px solid #c9f2dc;
@@ -105,11 +74,22 @@
     li {
       background: #eafff3;
       margin: 6px 0;
-      padding: 8px;
+      padding: 10px;
       border-radius: 12px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .task-main {
+      text-align: left;
+      flex: 1;
+    }
+
+    .task-date {
+      font-size: 12px;
+      color: #6bbf9c;
     }
 
     .task-buttons {
@@ -122,28 +102,60 @@
       opacity: 0.6;
     }
 
+    .timer {
+      font-size: 30px;
+      color: #4fbf90;
+      margin: 6px 0;
+    }
+
+    .progress {
+      background: #d9f5e7;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 10px;
+      margin-bottom: 6px;
+    }
+
+    .progress-fill {
+      background: #7adbb3;
+      height: 100%;
+      width: 0%;
+      transition: width 0.5s;
+    }
+
+    .stats, .mood {
+      font-size: 14px;
+      color: #4fbf90;
+      margin-top: 6px;
+    }
+
     .peace {
-      margin-top: 14px;
+      margin-top: 16px;
       padding-top: 10px;
       border-top: 2px dashed #c9f2dc;
+    }
+
+    .peace-title {
+      color: #4fbf90;
+      font-size: 18px;
+      margin-bottom: 6px;
     }
 
     .paws {
       display: flex;
       justify-content: center;
-      gap: 10px;
-      margin-top: 6px;
+      gap: 12px;
     }
 
     .paw-toy {
-      width: 46px;
-      height: 46px;
+      width: 50px;
+      height: 50px;
       background: #c9f2dc;
       border-radius: 50%;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 22px;
+      font-size: 24px;
       cursor: pointer;
       transition: transform 0.15s ease;
       user-select: none;
@@ -155,109 +167,195 @@
   </style>
 </head>
 <body>
-  <div class="app">
-    <!-- 📅 Calendar Sidebar -->
-    <div class="calendar">
-      <h3>calendar 📅</h3>
-      <input type="date" id="datePicker">
-      <div style="margin-top:8px; font-size:13px; color:#7ac7a6;">
-        tasks are saved per day
-      </div>
+  <div class="card">
+    <div>🐾</div>
+    <h1>Pochacco Focus</h1>
+    <div class="sub">focus. rest. squish.</div>
+
+    <input id="taskInput" placeholder="task name 🍃">
+    <input type="date" id="dateInput">
+    <button onclick="addTask()">add task</button>
+
+    <ul id="taskList"></ul>
+
+    <select id="lengthSelect" onchange="setLength()">
+      <option value="1500">25 min focus</option>
+      <option value="900">15 min focus</option>
+      <option value="300">5 min quick focus</option>
+    </select>
+
+    <div class="timer" id="timer">25:00</div>
+
+    <div class="progress">
+      <div class="progress-fill" id="progressFill"></div>
     </div>
 
-    <!-- Main App -->
-    <div class="card">
-      <div>🐾</div>
-      <h1>Pochacco Focus</h1>
-      <div class="sub">plan days. gently.</div>
+    <button onclick="startTimer()">start</button>
+    <button onclick="resetTimer()">reset</button>
 
-      <input id="taskInput" placeholder="add a task 🍃">
-      <button onclick="addTask()">add task</button>
+    <div class="stats" id="stats">sessions completed: 0</div>
 
-      <ul id="taskList"></ul>
+    <select id="moodSelect" onchange="updateMood()">
+      <option value="">how do you feel?</option>
+      <option value="happy">😊 playful</option>
+      <option value="tired">😴 sleepy pup</option>
+      <option value="sad">🥺 low battery</option>
+      <option value="stressed">😵 overwhelmed</option>
+    </select>
 
-      <div class="peace">
-        <div>peace corner 🌿</div>
-        <div class="paws">
-          <div class="paw-toy">🐾</div>
-          <div class="paw-toy">🐾</div>
-          <div class="paw-toy">🐾</div>
-        </div>
+    <div class="mood" id="moodMessage"></div>
+
+    <div class="peace">
+      <div class="peace-title">peace corner 🌿</div>
+      <div class="paws">
+        <div class="paw-toy">🐾</div>
+        <div class="paw-toy">🐾</div>
+        <div class="paw-toy">🐾</div>
       </div>
     </div>
   </div>
 
   <script>
-    const datePicker = document.getElementById("datePicker");
-    const taskList = document.getElementById("taskList");
+    let duration = 1500;
+    let time = duration;
+    let interval = null;
+    let sessions = Number(localStorage.getItem("sessions")) || 0;
 
-    const today = new Date().toISOString().split("T")[0];
-    datePicker.value = today;
-    let currentDate = today;
+    document.getElementById("stats").textContent =
+      `sessions completed: ${sessions}`;
 
-    function getTasks(date) {
-      return JSON.parse(localStorage.getItem("tasks-" + date) || "[]");
-    }
-
-    function saveTasks(date, tasks) {
-      localStorage.setItem("tasks-" + date, JSON.stringify(tasks));
-    }
-
-    function renderTasks() {
-      taskList.innerHTML = "";
-      const tasks = getTasks(currentDate);
-
-      tasks.forEach((task, index) => {
-        const li = document.createElement("li");
-
-        const span = document.createElement("span");
-        span.textContent = task.text;
-        if (task.done) span.classList.add("done");
-
-        const buttons = document.createElement("div");
-        buttons.className = "task-buttons";
-
-        const doneBtn = document.createElement("button");
-        doneBtn.textContent = "✔";
-        doneBtn.onclick = () => {
-          task.done = !task.done;
-          saveTasks(currentDate, tasks);
-          renderTasks();
-        };
-
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "🗑";
-        deleteBtn.onclick = () => {
-          tasks.splice(index, 1);
-          saveTasks(currentDate, tasks);
-          renderTasks();
-        };
-
-        buttons.appendChild(doneBtn);
-        buttons.appendChild(deleteBtn);
-
-        li.appendChild(span);
-        li.appendChild(buttons);
-        taskList.appendChild(li);
+    function saveTasks() {
+      const tasks = [];
+      document.querySelectorAll("#taskList li").forEach(li => {
+        const span = li.querySelector(".task-text");
+        const date = li.querySelector(".task-date")?.dataset.date || "";
+        tasks.push({
+          text: span.textContent,
+          done: span.classList.contains("done"),
+          date
+        });
       });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
     }
 
-    function addTask() {
+    function loadTasks() {
+      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+      tasks.forEach(t => addTask(t.text, t.done, t.date));
+    }
+
+    function addTask(textOverride, doneOverride, dateOverride) {
       const input = document.getElementById("taskInput");
-      const text = input.value.trim();
+      const dateInput = document.getElementById("dateInput");
+
+      const text = textOverride || input.value.trim();
+      const date = dateOverride ?? dateInput.value;
+
       if (!text) return;
 
-      const tasks = getTasks(currentDate);
-      tasks.push({ text, done: false });
-      saveTasks(currentDate, tasks);
+      const li = document.createElement("li");
+
+      const main = document.createElement("div");
+      main.className = "task-main";
+
+      const span = document.createElement("div");
+      span.className = "task-text";
+      span.textContent = text;
+      if (doneOverride) span.classList.add("done");
+
+      main.appendChild(span);
+
+      if (date) {
+        const dateDiv = document.createElement("div");
+        dateDiv.className = "task-date";
+        dateDiv.dataset.date = date;
+        dateDiv.textContent = `due ${date}`;
+        main.appendChild(dateDiv);
+      }
+
+      const buttons = document.createElement("div");
+      buttons.className = "task-buttons";
+
+      const doneBtn = document.createElement("button");
+      doneBtn.textContent = "✔";
+      doneBtn.onclick = () => {
+        span.classList.toggle("done");
+        saveTasks();
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "🗑";
+      deleteBtn.onclick = () => {
+        li.remove();
+        saveTasks();
+      };
+
+      buttons.appendChild(doneBtn);
+      buttons.appendChild(deleteBtn);
+
+      li.appendChild(main);
+      li.appendChild(buttons);
+      document.getElementById("taskList").appendChild(li);
+
       input.value = "";
-      renderTasks();
+      dateInput.value = "";
+      saveTasks();
     }
 
-    datePicker.addEventListener("change", () => {
-      currentDate = datePicker.value;
-      renderTasks();
-    });
+    function setLength() {
+      duration = Number(document.getElementById("lengthSelect").value);
+      resetTimer();
+    }
+
+    function startTimer() {
+      if (interval) return;
+
+      interval = setInterval(() => {
+        time--;
+        updateTimer();
+
+        if (time <= 0) {
+          clearInterval(interval);
+          interval = null;
+          sessions++;
+          localStorage.setItem("sessions", sessions);
+          document.getElementById("stats").textContent =
+            `sessions completed: ${sessions}`;
+          alert("focus done 🌱 take a break!");
+          resetTimer();
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(interval);
+      interval = null;
+      time = duration;
+      updateTimer();
+    }
+
+    function updateTimer() {
+      const minutes = Math.floor(time / 60);
+      const seconds = time % 60;
+      document.getElementById("timer").textContent =
+        `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+      const progress = ((duration - time) / duration) * 100;
+      document.getElementById("progressFill").style.width = `${progress}%`;
+    }
+
+    function updateMood() {
+      const mood = document.getElementById("moodSelect").value;
+      const message = document.getElementById("moodMessage");
+
+      const messages = {
+        happy: "pochacco is cheering 🐾",
+        tired: "rest is allowed 😴",
+        sad: "gentle days still count 🍀",
+        stressed: "slow breaths. small steps 💚"
+      };
+
+      message.textContent = messages[mood] || "";
+    }
 
     document.querySelectorAll(".paw-toy").forEach(paw => {
       paw.addEventListener("click", () => {
@@ -266,7 +364,8 @@
       });
     });
 
-    renderTasks();
+    loadTasks();
+    updateTimer();
   </script>
 </body>
 </html>
