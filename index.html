@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pochacco Planner 🍀</title>
+<title>Pochacco Focus 🐾</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Hubballi&display=swap" rel="stylesheet">
 
@@ -27,20 +27,28 @@
   }
 
   h1 {
-    margin: 0;
     text-align: center;
     color: #4fbf90;
+    margin: 0;
   }
 
   .sub {
     text-align: center;
     font-size: 13px;
     color: #7ac7a6;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
-  button, input {
+  button, input, select {
     font-family: 'Hubballi', sans-serif;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 14px;
+    border: 1px solid #bfead3;
+    margin: 6px 0;
   }
 
   button {
@@ -49,20 +57,29 @@
     border-radius: 14px;
     padding: 8px;
     cursor: pointer;
-    font-size: 14px;
   }
 
   button:hover {
     background: #8fd9b6;
   }
 
+  .timer {
+    text-align: center;
+    margin: 12px 0;
+  }
+
+  .time {
+    font-size: 32px;
+    color: #4fbf90;
+  }
+
   .subject {
     background: #eafff3;
-    padding: 10px;
+    padding: 8px;
     border-radius: 14px;
     margin: 6px 0;
-    cursor: pointer;
     text-align: center;
+    cursor: pointer;
   }
 
   .task {
@@ -73,7 +90,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
   }
 
   .date {
@@ -82,20 +98,20 @@
   }
 
   .peace {
-    margin-top: 16px;
     text-align: center;
+    margin-top: 12px;
   }
 
   .paws {
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     margin-top: 6px;
   }
 
   .paw {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     background: #c9f2dc;
     border-radius: 50%;
     cursor: pointer;
@@ -131,29 +147,56 @@
 <div class="popup" id="popup">
   <div class="popup-box">
     <h3>Add Subject</h3>
-    <input id="subjectName" placeholder="subject name 🍃" style="width:100%;padding:8px;">
-    <button style="width:100%;margin-top:8px;" onclick="createSubject()">add</button>
+    <input id="subjectName" placeholder="subject name 🍃">
+    <button style="width:100%;" onclick="createSubject()">add</button>
   </div>
 </div>
 
 <script>
-const subjects = {};
+let subjects = JSON.parse(localStorage.getItem("subjects")) || {};
+
+let time = 1500;
+let timer;
+let sessions = 0;
+
+function save() {
+  localStorage.setItem("subjects", JSON.stringify(subjects));
+}
 
 function renderHome() {
   location.hash = "";
   const app = document.getElementById("app");
   app.innerHTML = `
-    <h1>Pochacco Planner</h1>
-    <div class="sub">organized but gentle</div>
+    <h1>🐾 Pochacco Focus</h1>
+    <div class="sub">focus. rest. squish.</div>
+
+    <input placeholder="task name 🍃">
+    <input type="date">
+    <button>add task</button>
+
+    <div class="timer">
+      <div>25 min focus</div>
+      <div class="time" id="time">${formatTime()}</div>
+      <button onclick="start()">start</button>
+      <button onclick="reset()">reset</button>
+      <div>sessions completed: ${sessions}</div>
+    </div>
 
     <button onclick="openPopup()">➕ add subject</button>
+    ${Object.keys(subjects).map(s => `
+      <div class="subject" onclick="openSubject('${s}')">${s}</div>
+    `).join("")}
 
-    ${Object.keys(subjects).map(s =>
-      `<div class="subject" onclick="openSubject('${s}')">${s}</div>`
-    ).join("")}
+    <select>
+      <option>how do you feel?</option>
+      <option>😊 good</option>
+      <option>😴 tired</option>
+      <option>🥺 low</option>
+      <option>😵 stressed</option>
+    </select>
 
     <div class="peace">
-      <div>peace corner 🐾</div>
+      peace corner 🌿
       <div class="paws">
         <div class="paw"></div>
         <div class="paw"></div>
@@ -171,6 +214,7 @@ function createSubject() {
   const name = document.getElementById("subjectName").value.trim();
   if (!name) return;
   subjects[name] = [];
+  save();
   document.getElementById("subjectName").value = "";
   document.getElementById("popup").style.display = "none";
   renderHome();
@@ -187,7 +231,7 @@ function openSubject(name) {
     <input type="date" id="taskDate">
     <button onclick="addTask('${name}')">add task</button>
 
-    ${subjects[name].map((t,i) => `
+    ${subjects[name].map((t,i)=>`
       <div class="task">
         <div>
           ${t.text}
@@ -197,7 +241,7 @@ function openSubject(name) {
       </div>
     `).join("")}
 
-    <button style="margin-top:10px;width:100%;" onclick="renderHome()">← back</button>
+    <button style="width:100%;margin-top:8px;" onclick="renderHome()">← back</button>
   `;
 }
 
@@ -206,12 +250,42 @@ function addTask(subject) {
   const date = document.getElementById("taskDate").value;
   if (!text) return;
   subjects[subject].push({ text, date });
+  save();
   openSubject(subject);
 }
 
-function deleteTask(subject, index) {
-  subjects[subject].splice(index,1);
+function deleteTask(subject,i) {
+  subjects[subject].splice(i,1);
+  save();
   openSubject(subject);
+}
+
+function start() {
+  if (timer) return;
+  timer = setInterval(() => {
+    time--;
+    document.getElementById("time").textContent = formatTime();
+    if (time === 0) {
+      clearInterval(timer);
+      timer = null;
+      sessions++;
+      time = 1500;
+      renderHome();
+    }
+  }, 1000);
+}
+
+function reset() {
+  clearInterval(timer);
+  timer = null;
+  time = 1500;
+  renderHome();
+}
+
+function formatTime() {
+  const m = Math.floor(time / 60);
+  const s = time % 60;
+  return `${m}:${s.toString().padStart(2,"0")}`;
 }
 
 renderHome();
