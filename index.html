@@ -1,371 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>🍀 Pochacco Focus 🍀</title>
+<meta charset="UTF-8">
+<title>Pochacco Planner 🍀</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Hubballi&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hubballi&display=swap" rel="stylesheet">
 
-  <style>
-    body {
-      background: linear-gradient(135deg, #e8fff1, #f3fff8);
-      font-family: "Hubballi", sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
+<style>
+  body {
+    margin: 0;
+    font-family: 'Hubballi', sans-serif;
+    background: linear-gradient(135deg, #e9fff2, #f4fff9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
 
-    .card {
-      background: white;
-      border-radius: 22px;
-      padding: 25px;
-      width: 400px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-      text-align: center;
-      border: 3px solid #c9f2dc;
-      overflow-y: auto;
-      max-height: 90vh;
-    }
+  .card {
+    background: white;
+    width: 360px;
+    padding: 20px;
+    border-radius: 22px;
+    border: 3px solid #c9f2dc;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  }
 
-    h1 {
-      color: #4fbf90;
-      margin: 0;
-      font-size: 26px;
-    }
+  h1 {
+    margin: 0;
+    text-align: center;
+    color: #4fbf90;
+  }
 
-    .sub {
-      font-size: 14px;
-      color: #7ac7a6;
-      margin-bottom: 10px;
-    }
+  .sub {
+    text-align: center;
+    font-size: 13px;
+    color: #7ac7a6;
+    margin-bottom: 12px;
+  }
 
-    input, button, select {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      border-radius: 14px;
-      border: 1px solid #bfead3;
-      background: #f7fffb;
-      font-family: "Hubballi", sans-serif;
-      font-size: 15px;
-    }
+  button, input {
+    font-family: 'Hubballi', sans-serif;
+  }
 
-    button {
-      background: #a8e6c8;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
+  button {
+    background: #a8e6c8;
+    border: none;
+    border-radius: 14px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
 
-    button:hover {
-      background: #8fd9b6;
-    }
+  button:hover {
+    background: #8fd9b6;
+  }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 10px 0;
-    }
+  .subject {
+    background: #eafff3;
+    padding: 10px;
+    border-radius: 14px;
+    margin: 6px 0;
+    cursor: pointer;
+    text-align: center;
+  }
 
-    li {
-      background: #eafff3;
-      margin: 6px 0;
-      padding: 10px;
-      border-radius: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-    }
+  .task {
+    background: #f2fff8;
+    border-radius: 12px;
+    padding: 8px;
+    margin: 6px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
 
-    .task-main {
-      text-align: left;
-      flex: 1;
-    }
+  .date {
+    font-size: 11px;
+    color: #6fbf9c;
+  }
 
-    .task-date {
-      font-size: 12px;
-      color: #6bbf9c;
-    }
+  .peace {
+    margin-top: 16px;
+    text-align: center;
+  }
 
-    .task-buttons {
-      display: flex;
-      gap: 6px;
-    }
+  .paws {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
 
-    .done {
-      text-decoration: line-through;
-      opacity: 0.6;
-    }
+  .paw {
+    width: 40px;
+    height: 40px;
+    background: #c9f2dc;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
 
-    .timer {
-      font-size: 30px;
-      color: #4fbf90;
-      margin: 6px 0;
-    }
+  .paw:active {
+    transform: scale(0.75);
+  }
 
-    .progress {
-      background: #d9f5e7;
-      border-radius: 10px;
-      overflow: hidden;
-      height: 10px;
-      margin-bottom: 6px;
-    }
+  .popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.2);
+    display: none;
+    justify-content: center;
+    align-items: center;
+  }
 
-    .progress-fill {
-      background: #7adbb3;
-      height: 100%;
-      width: 0%;
-      transition: width 0.5s;
-    }
-
-    .stats, .mood {
-      font-size: 14px;
-      color: #4fbf90;
-      margin-top: 6px;
-    }
-
-    .peace {
-      margin-top: 16px;
-      padding-top: 10px;
-      border-top: 2px dashed #c9f2dc;
-    }
-
-    .peace-title {
-      color: #4fbf90;
-      font-size: 18px;
-      margin-bottom: 6px;
-    }
-
-    .paws {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    .paw-toy {
-      width: 50px;
-      height: 50px;
-      background: #c9f2dc;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 24px;
-      cursor: pointer;
-      transition: transform 0.15s ease;
-      user-select: none;
-    }
-
-    .paw-toy.squish {
-      transform: scale(0.75);
-    }
-  </style>
+  .popup-box {
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    width: 260px;
+    border: 2px solid #c9f2dc;
+  }
+</style>
 </head>
+
 <body>
-  <div class="card">
-    <div>🐾</div>
-    <h1>Pochacco Focus</h1>
-    <div class="sub">focus. rest. squish.</div>
+<div class="card" id="app"></div>
 
-    <input id="taskInput" placeholder="task name 🍃">
-    <input type="date" id="dateInput">
-    <button onclick="addTask()">add task</button>
+<div class="popup" id="popup">
+  <div class="popup-box">
+    <h3>Add Subject</h3>
+    <input id="subjectName" placeholder="subject name 🍃" style="width:100%;padding:8px;">
+    <button style="width:100%;margin-top:8px;" onclick="createSubject()">add</button>
+  </div>
+</div>
 
-    <ul id="taskList"></ul>
+<script>
+const subjects = {};
 
-    <select id="lengthSelect" onchange="setLength()">
-      <option value="1500">25 min focus</option>
-      <option value="900">15 min focus</option>
-      <option value="300">5 min quick focus</option>
-    </select>
+function renderHome() {
+  location.hash = "";
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <h1>Pochacco Planner</h1>
+    <div class="sub">organized but gentle</div>
 
-    <div class="timer" id="timer">25:00</div>
+    <button onclick="openPopup()">➕ add subject</button>
 
-    <div class="progress">
-      <div class="progress-fill" id="progressFill"></div>
-    </div>
-
-    <button onclick="startTimer()">start</button>
-    <button onclick="resetTimer()">reset</button>
-
-    <div class="stats" id="stats">sessions completed: 0</div>
-
-    <select id="moodSelect" onchange="updateMood()">
-      <option value="">how do you feel?</option>
-      <option value="happy">😊 playful</option>
-      <option value="tired">😴 sleepy pup</option>
-      <option value="sad">🥺 low battery</option>
-      <option value="stressed">😵 overwhelmed</option>
-    </select>
-
-    <div class="mood" id="moodMessage"></div>
+    ${Object.keys(subjects).map(s =>
+      `<div class="subject" onclick="openSubject('${s}')">${s}</div>`
+    ).join("")}
 
     <div class="peace">
-      <div class="peace-title">peace corner 🌿</div>
+      <div>peace corner 🐾</div>
       <div class="paws">
-        <div class="paw-toy">🐾</div>
-        <div class="paw-toy">🐾</div>
-        <div class="paw-toy">🐾</div>
+        <div class="paw"></div>
+        <div class="paw"></div>
+        <div class="paw"></div>
       </div>
     </div>
-  </div>
+  `;
+}
 
-  <script>
-    let duration = 1500;
-    let time = duration;
-    let interval = null;
-    let sessions = Number(localStorage.getItem("sessions")) || 0;
+function openPopup() {
+  document.getElementById("popup").style.display = "flex";
+}
 
-    document.getElementById("stats").textContent =
-      `sessions completed: ${sessions}`;
+function createSubject() {
+  const name = document.getElementById("subjectName").value.trim();
+  if (!name) return;
+  subjects[name] = [];
+  document.getElementById("subjectName").value = "";
+  document.getElementById("popup").style.display = "none";
+  renderHome();
+}
 
-    function saveTasks() {
-      const tasks = [];
-      document.querySelectorAll("#taskList li").forEach(li => {
-        const span = li.querySelector(".task-text");
-        const date = li.querySelector(".task-date")?.dataset.date || "";
-        tasks.push({
-          text: span.textContent,
-          done: span.classList.contains("done"),
-          date
-        });
-      });
-      localStorage.setItem("tasks", JSON.stringify(tasks));
-    }
+function openSubject(name) {
+  location.hash = name;
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <h1>${name}</h1>
+    <div class="sub">Upcoming</div>
 
-    function loadTasks() {
-      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-      tasks.forEach(t => addTask(t.text, t.done, t.date));
-    }
+    <input id="taskText" placeholder="task ✨">
+    <input type="date" id="taskDate">
+    <button onclick="addTask('${name}')">add task</button>
 
-    function addTask(textOverride, doneOverride, dateOverride) {
-      const input = document.getElementById("taskInput");
-      const dateInput = document.getElementById("dateInput");
+    ${subjects[name].map((t,i) => `
+      <div class="task">
+        <div>
+          ${t.text}
+          ${t.date ? `<div class="date">${t.date}</div>` : ""}
+        </div>
+        <button onclick="deleteTask('${name}',${i})">✖</button>
+      </div>
+    `).join("")}
 
-      const text = textOverride || input.value.trim();
-      const date = dateOverride ?? dateInput.value;
+    <button style="margin-top:10px;width:100%;" onclick="renderHome()">← back</button>
+  `;
+}
 
-      if (!text) return;
+function addTask(subject) {
+  const text = document.getElementById("taskText").value;
+  const date = document.getElementById("taskDate").value;
+  if (!text) return;
+  subjects[subject].push({ text, date });
+  openSubject(subject);
+}
 
-      const li = document.createElement("li");
+function deleteTask(subject, index) {
+  subjects[subject].splice(index,1);
+  openSubject(subject);
+}
 
-      const main = document.createElement("div");
-      main.className = "task-main";
-
-      const span = document.createElement("div");
-      span.className = "task-text";
-      span.textContent = text;
-      if (doneOverride) span.classList.add("done");
-
-      main.appendChild(span);
-
-      if (date) {
-        const dateDiv = document.createElement("div");
-        dateDiv.className = "task-date";
-        dateDiv.dataset.date = date;
-        dateDiv.textContent = `due ${date}`;
-        main.appendChild(dateDiv);
-      }
-
-      const buttons = document.createElement("div");
-      buttons.className = "task-buttons";
-
-      const doneBtn = document.createElement("button");
-      doneBtn.textContent = "✔";
-      doneBtn.onclick = () => {
-        span.classList.toggle("done");
-        saveTasks();
-      };
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "🗑";
-      deleteBtn.onclick = () => {
-        li.remove();
-        saveTasks();
-      };
-
-      buttons.appendChild(doneBtn);
-      buttons.appendChild(deleteBtn);
-
-      li.appendChild(main);
-      li.appendChild(buttons);
-      document.getElementById("taskList").appendChild(li);
-
-      input.value = "";
-      dateInput.value = "";
-      saveTasks();
-    }
-
-    function setLength() {
-      duration = Number(document.getElementById("lengthSelect").value);
-      resetTimer();
-    }
-
-    function startTimer() {
-      if (interval) return;
-
-      interval = setInterval(() => {
-        time--;
-        updateTimer();
-
-        if (time <= 0) {
-          clearInterval(interval);
-          interval = null;
-          sessions++;
-          localStorage.setItem("sessions", sessions);
-          document.getElementById("stats").textContent =
-            `sessions completed: ${sessions}`;
-          alert("focus done 🌱 take a break!");
-          resetTimer();
-        }
-      }, 1000);
-    }
-
-    function resetTimer() {
-      clearInterval(interval);
-      interval = null;
-      time = duration;
-      updateTimer();
-    }
-
-    function updateTimer() {
-      const minutes = Math.floor(time / 60);
-      const seconds = time % 60;
-      document.getElementById("timer").textContent =
-        `${minutes}:${seconds.toString().padStart(2, "0")}`;
-
-      const progress = ((duration - time) / duration) * 100;
-      document.getElementById("progressFill").style.width = `${progress}%`;
-    }
-
-    function updateMood() {
-      const mood = document.getElementById("moodSelect").value;
-      const message = document.getElementById("moodMessage");
-
-      const messages = {
-        happy: "pochacco is cheering 🐾",
-        tired: "rest is allowed 😴",
-        sad: "gentle days still count 🍀",
-        stressed: "slow breaths. small steps 💚"
-      };
-
-      message.textContent = messages[mood] || "";
-    }
-
-    document.querySelectorAll(".paw-toy").forEach(paw => {
-      paw.addEventListener("click", () => {
-        paw.classList.add("squish");
-        setTimeout(() => paw.classList.remove("squish"), 150);
-      });
-    });
-
-    loadTasks();
-    updateTimer();
-  </script>
+renderHome();
+</script>
 </body>
 </html>
