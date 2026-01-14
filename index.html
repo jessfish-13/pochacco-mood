@@ -106,7 +106,7 @@ button:hover { background:#8fd9b6; }
 
 <script>
 let data = JSON.parse(localStorage.getItem("pochacco")) || {};
-let audio = null;
+let currentAudio = null;
 
 // pomodoro
 let time = 1500;
@@ -150,11 +150,11 @@ function home() {
 
     <div class="music">
       <div class="sub">focus music</div>
-      <button onclick="play('rain')">🌧 rain</button>
-      <button onclick="play('cafe')">☕ cafe</button>
-      <button onclick="play('lofi')">🎶 lofi</button>
-      <button onclick="play('fire')">🔥 campfire</button>
-      <button onclick="stop()">⏹ stop</button>
+      <button id="rainBtn" onclick="playMusic('rain')">🌧 rain</button>
+      <button id="cafeBtn" onclick="playMusic('cafe')">☕ cafe</button>
+      <button id="lofiBtn" onclick="playMusic('lofi')">🎶 lofi</button>
+      <button id="fireBtn" onclick="playMusic('fire')">🔥 campfire</button>
+      <button onclick="stopMusic()">⏹ stop</button>
     </div>
 
     <div class="peace">
@@ -279,22 +279,36 @@ function formatTime() {
   return `${m}:${s.toString().padStart(2,"0")}`;
 }
 
-// MUSIC
-function play(type) {
-  stop();
-  const sounds = {
-    rain:"https://cdn.pixabay.com/audio/2022/03/15/audio_0e7a3c8b4f.mp3",
-    cafe:"https://cdn.pixabay.com/audio/2022/02/23/audio_7c2d1f7f63.mp3",
-    lofi:"https://cdn.pixabay.com/audio/2022/03/15/audio_5c5c8d41b5.mp3",
-    fire:"https://cdn.pixabay.com/audio/2021/10/30/audio_8d8c71a1d0.mp3"
-  };
-  audio = new Audio(sounds[type]);
-  audio.loop = true;
-  audio.volume = 0.4;
-  audio.play();
+// FOCUS MUSIC (fixed for GitHub)
+const audioFiles = {
+  rain:"https://cdn.pixabay.com/audio/2022/03/15/audio_0e7a3c8b4f.mp3",
+  cafe:"https://cdn.pixabay.com/audio/2022/02/23/audio_7c2d1f7f63.mp3",
+  lofi:"https://cdn.pixabay.com/audio/2022/03/15/audio_5c5c8d41b5.mp3",
+  fire:"https://cdn.pixabay.com/audio/2021/10/30/audio_8d8c71a1d0.mp3"
+};
+
+function playMusic(type) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
+  currentAudio = new Audio(audioFiles[type]);
+  currentAudio.loop = true;
+  currentAudio.volume = 0.4;
+  currentAudio.play().catch(e=>console.log("Audio blocked:",e));
+
+  document.querySelectorAll(".music button").forEach(b => b.style.opacity=1);
+  const btn = document.getElementById(type+"Btn");
+  if (btn) btn.style.opacity=0.6;
 }
-function stop() {
-  if (audio) audio.pause();
+
+function stopMusic() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  document.querySelectorAll(".music button").forEach(b => b.style.opacity=1);
 }
 
 home();
