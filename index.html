@@ -64,14 +64,8 @@ button:hover {
   padding:8px;
   border-radius:14px;
   margin:6px 0;
-  display:flex;
-  align-items:center;
-  gap:8px;
+  text-align:center;
   cursor:pointer;
-}
-
-.subject img {
-  width:28px;
 }
 
 .task {
@@ -79,11 +73,6 @@ button:hover {
   border-radius:12px;
   padding:8px;
   margin:6px 0;
-}
-
-.task.done {
-  opacity:0.5;
-  text-decoration: line-through;
 }
 
 .tag {
@@ -97,8 +86,6 @@ button:hover {
   border-left:4px solid #4fbf90;
   padding:6px;
   margin:5px 0;
-  display:flex;
-  justify-content:space-between;
 }
 
 .timer {
@@ -135,27 +122,23 @@ button:hover {
 .paw:active {
   transform:scale(0.75);
 }
-
-#pochaccoPop {
-  text-align:center;
-  margin:10px 0;
-}
 </style>
 </head>
 
 <body>
 <div class="card" id="app"></div>
 
-<audio id="alarmSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_477f7cfa3c.mp3"></audio>
-
 <script>
 let data = JSON.parse(localStorage.getItem("pochacco")) || {};
-let streak = parseInt(localStorage.getItem("streak")) || 0;
-let lastSessionDay = localStorage.getItem("lastDay") || "";
 
-let defaultMinutes = 25;
-let time = defaultMinutes * 60;
+// pomodoro
+let time = 1500;
 let timer = null;
+let sessions = 0;
+
+function save() {
+  localStorage.setItem("pochacco", JSON.stringify(data));
+}
 
 // HOME
 function home() {
@@ -164,31 +147,21 @@ function home() {
     <h1>🐾 Pochacco Focus</h1>
     <div class="sub">focus. rest. squish.</div>
 
-    <div class="sub">current streak: ${streak} 🌱</div>
-
     <input id="quickTask" placeholder="quick task + #tags 🍃">
     <button onclick="addInboxTask()">add task</button>
 
     <div class="timer">
-      <div class="sub">focus time (minutes)</div>
-      <input type="number" min="1" placeholder="25" id="customTime">
-      <button onclick="setCustomTime()">set time</button>
-
+      <div>25 min focus</div>
       <div class="time" id="time">${formatTime()}</div>
       <button onclick="start()">start</button>
       <button onclick="reset()">reset</button>
+      <div>sessions completed: ${sessions}</div>
     </div>
 
     <button onclick="newSubject()">➕ add subject</button>
-
-    ${Object.keys(data).filter(s=>!data[s].archived).map(s=>`
-      <div class="subject" onclick="openSubject('${s}')">
-        <img src="https://i.imgur.com/9R8QqjC.png">
-        ${s}
-      </div>
+    ${Object.keys(data).map(s=>`
+      <div class="subject" onclick="openSubject('${s}')">${s}</div>
     `).join("")}
-
-    <button onclick="viewArchived()">archived subjects</button>
 
     <select>
       <option>how do you feel?</option>
@@ -217,14 +190,12 @@ function openSubject(s) {
     <h1>${s}</h1>
 
     <div class="sub">pinned</div>
-    ${subj.pins.map((p,i)=>`
-      <div class="pinned">
-        ${p}
-        <button onclick="delPin('${s}',${i})">✖</button>
-      </div>
-    `).join("")}
+    ${subj.pins.map(p=>`<div class="pinned">${p}</div>`).join("")}
     <input id="pinText" placeholder="add pinned note">
     <button onclick="addPin('${s}')">pin</button>
+
+    <div class="sub">notes</div>
+    <textarea rows="4" oninput="saveNotes('${s}',this.value)">${subj.notes}</textarea>
 
     <div class="sub">tasks</div>
     <input id="taskText" placeholder="task + #tags">
@@ -232,16 +203,14 @@ function openSubject(s) {
     <button onclick="addTask('${s}')">add task</button>
 
     ${subj.tasks.map((t,i)=>`
-      <div class="task ${t.done?'done':''}">
+      <div class="task">
         ${t.text}
         <div>${t.tags.map(tag=>`<span class="tag">#${tag}</span>`).join("")}</div>
         ${t.date || ""}
-        <button onclick="toggleTask('${s}',${i})">✔</button>
         <button onclick="delTask('${s}',${i})">✖</button>
       </div>
     `).join("")}
 
-    <button onclick="archiveSubject('${s}')">archive subject</button>
     <button onclick="home()">← back</button>
   `;
 }
@@ -250,48 +219,22 @@ function openSubject(s) {
 function newSubject() {
   const name = prompt("subject name");
   if (!name) return;
-  data[name] = { tasks:[], pins:[], archived:false };
-  save();
-  home();
-}
-
-function archiveSubject(s) {
-  data[s].archived = true;
-  save();
-  home();
-}
-
-function viewArchived() {
-  const app = document.getElementById("app");
-  app.innerHTML = `
-    <h1>archived</h1>
-    ${Object.keys(data).filter(s=>data[s].archived).map(s=>`
-      <div class="subject" onclick="restore('${s}')">
-        ${s}
-      </div>
-    `).join("")}
-    <button onclick="home()">← back</button>
-  `;
-}
-
-function restore(s) {
-  data[s].archived = false;
+  data[name] = { tasks:[], notes:"", pins:[] };
   save();
   home();
 }
 
 function addPin(s) {
-  const v = document.getElementById("pinText").value;
-  if (!v) return;
-  data[s].pins.push(v);
+  const text = document.getElementById("pinText").value;
+  if (!text) return;
+  data[s].pins.push(text);
   save();
   openSubject(s);
 }
 
-function delPin(s,i) {
-  data[s].pins.splice(i,1);
+function saveNotes(s,v) {
+  data[s].notes = v;
   save();
-  openSubject(s);
 }
 
 function addTask(s) {
@@ -299,13 +242,7 @@ function addTask(s) {
   const date = document.getElementById("taskDate").value;
   if (!text) return;
   const tags = text.match(/#\w+/g)?.map(t=>t.slice(1)) || [];
-  data[s].tasks.push({ text, date, tags, done:false });
-  save();
-  openSubject(s);
-}
-
-function toggleTask(s,i) {
-  data[s].tasks[i].done = !data[s].tasks[i].done;
+  data[s].tasks.push({ text, date, tags });
   save();
   openSubject(s);
 }
@@ -316,61 +253,37 @@ function delTask(s,i) {
   openSubject(s);
 }
 
+// QUICK TASK
 function addInboxTask() {
   const text = document.getElementById("quickTask").value;
   if (!text) return;
-  if (!data["Inbox"]) data["Inbox"] = { tasks:[], pins:[], archived:false };
+  if (!data["Inbox"]) data["Inbox"] = { tasks:[], notes:"", pins:[] };
   const tags = text.match(/#\w+/g)?.map(t=>t.slice(1)) || [];
-  data["Inbox"].tasks.push({ text, date:"", tags, done:false });
+  data["Inbox"].tasks.push({ text, date:"", tags });
   save();
   document.getElementById("quickTask").value = "";
 }
 
-// TIMER
-function setCustomTime() {
-  const v = parseInt(document.getElementById("customTime").value);
-  if (!v) return;
-  defaultMinutes = v;
-  reset();
-}
-
+// POMODORO
 function start() {
   if (timer) return;
   timer = setInterval(()=>{
     time--;
     document.getElementById("time").textContent = formatTime();
-    if (time === 0) finishSession();
+    if (time === 0) {
+      clearInterval(timer);
+      timer = null;
+      sessions++;
+      time = 1500;
+      home();
+    }
   },1000);
-}
-
-function finishSession() {
-  clearInterval(timer);
-  timer = null;
-  time = defaultMinutes * 60;
-
-  document.getElementById("alarmSound").play();
-
-  const today = new Date().toDateString();
-  if (lastSessionDay !== today) {
-    streak++;
-    lastSessionDay = today;
-    localStorage.setItem("streak", streak);
-    localStorage.setItem("lastDay", today);
-  }
-
-  document.getElementById("app").insertAdjacentHTML("afterbegin",`
-    <div id="pochaccoPop">
-      <img src="https://i.imgur.com/WvJrQJQ.png" width="120">
-    </div>
-  `);
-
-  save();
 }
 
 function reset() {
   clearInterval(timer);
   timer = null;
-  time = defaultMinutes * 60;
+  time = 1500;
   home();
 }
 
@@ -378,10 +291,6 @@ function formatTime() {
   const m = Math.floor(time/60);
   const s = time%60;
   return `${m}:${s.toString().padStart(2,"0")}`;
-}
-
-function save() {
-  localStorage.setItem("pochacco", JSON.stringify(data));
 }
 
 home();
