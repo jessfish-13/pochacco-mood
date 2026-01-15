@@ -131,8 +131,9 @@ button:hover {
 <script>
 let data = JSON.parse(localStorage.getItem("pochacco")) || {};
 
-// pomodoro
-let time = 1500;
+// timer
+let defaultMinutes = 25;
+let time = defaultMinutes * 60;
 let timer = null;
 let sessions = 0;
 
@@ -151,7 +152,10 @@ function home() {
     <button onclick="addInboxTask()">add task</button>
 
     <div class="timer">
-      <div>25 min focus</div>
+      <div class="sub">focus time (minutes)</div>
+      <input type="number" min="1" placeholder="25" id="customTime">
+      <button onclick="setCustomTime()">set time</button>
+
       <div class="time" id="time">${formatTime()}</div>
       <button onclick="start()">start</button>
       <button onclick="reset()">reset</button>
@@ -180,6 +184,15 @@ function home() {
       </div>
     </div>
   `;
+}
+
+// CUSTOM TIME
+function setCustomTime() {
+  const input = document.getElementById("customTime");
+  const minutes = parseInt(input.value);
+  if (!minutes || minutes <= 0) return;
+  defaultMinutes = minutes;
+  reset();
 }
 
 // SUBJECT PAGE
@@ -264,7 +277,7 @@ function addInboxTask() {
   document.getElementById("quickTask").value = "";
 }
 
-// POMODORO
+// TIMER
 function start() {
   if (timer) return;
   timer = setInterval(()=>{
@@ -274,7 +287,7 @@ function start() {
       clearInterval(timer);
       timer = null;
       sessions++;
-      time = 1500;
+      time = defaultMinutes * 60;
       home();
     }
   },1000);
@@ -283,7 +296,7 @@ function start() {
 function reset() {
   clearInterval(timer);
   timer = null;
-  time = 1500;
+  time = defaultMinutes * 60;
   home();
 }
 
