@@ -6,14 +6,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Hubballi&display=swap" rel="stylesheet">
 
 <style>
-:root {
+:root{
   --bg:#e9fff2;
   --card:#ffffff;
   --accent:#4fbf90;
   --text:#000000;
 }
 
-body {
+body{
   margin:0;
   font-family:'Hubballi',sans-serif;
   background:var(--bg);
@@ -24,7 +24,7 @@ body {
   height:100vh;
 }
 
-.card {
+.card{
   background:var(--card);
   width:390px;
   padding:18px;
@@ -33,15 +33,16 @@ body {
   box-shadow:0 12px 30px rgba(0,0,0,0.08);
   max-height:92vh;
   overflow-y:auto;
+  position:relative;
 }
 
-.topbar {
+.topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
 
-button,input,textarea {
+button,input,textarea{
   width:100%;
   padding:8px;
   margin:5px 0;
@@ -50,64 +51,80 @@ button,input,textarea {
   font-family:inherit;
 }
 
-button {
+button{
   background:#a8e6c8;
   border:none;
   cursor:pointer;
 }
 
-button:hover { background:#8fd9b6; }
+button:hover{background:#8fd9b6;}
 
-.subject,.task,.pin {
+.subject,.task,.pin{
   background:#f2fff8;
   padding:8px;
   border-radius:12px;
   margin:6px 0;
+}
+
+.task{
   position:relative;
+  padding:8px 36px 8px 8px;
 }
 
-.task {
-  padding:8px 32px 8px 8px;
-}
-
-.task.done {
+.task.done{
   opacity:0.5;
   text-decoration:line-through;
 }
 
-.pin {
-  background:#e3fff1;
-  border-left:4px solid #4fbf90;
-}
-
-textarea {
-  resize: both;
-}
-
-.task .delete {
+.task .delete{
   position:absolute;
   top:6px;
   right:10px;
   background:none;
   border:none;
-  cursor:pointer;
   font-size:14px;
+  cursor:pointer;
 }
 
-.tab {
+.pin{
+  background:#e3fff1;
+  border-left:4px solid var(--accent);
+  position:relative;
+}
+
+.pin button{
+  position:absolute;
+  right:6px;
+  top:6px;
+  background:none;
+  border:none;
+  cursor:pointer;
+}
+
+.tab{
   display:flex;
   gap:8px;
   margin-bottom:10px;
 }
 
-.tab button { flex:1; }
+.tab button{flex:1;}
 
-.theme {
+.theme{
   padding:10px;
   border-radius:12px;
   margin:6px 0;
   cursor:pointer;
   text-align:center;
+}
+
+.character-img{
+  position:absolute;
+  bottom:12px;
+  right:12px;
+  width:80px;
+  height:auto;
+  pointer-events:none;
+  opacity:0.9;
 }
 </style>
 </head>
@@ -118,13 +135,35 @@ textarea {
 <audio id="alarm" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script>
-let data = JSON.parse(localStorage.getItem("pochacco")) || {};
-let user = JSON.parse(localStorage.getItem("user")) || { name:"", avatar:"" };
-let settings = JSON.parse(localStorage.getItem("settings")) || {
-  bg:"#e9fff2", text:"#000000", character:"Pochacco"
+const characterImages={
+  Pochacco:"https://i5.walmartimages.com/asr/80a4c238-75a8-45a9-b18a-858ab04236fc.c56223b4ba5b167efc5151025a84af4d.jpeg",
+  Kuromi:"https://mystickermania.com/cdn/stickers/noob-pack/sanrio-kuromi-cute-512x512.png",
+  Keroppi:"https://wallpapers.com/images/hd/keroppi-cartoon-frog-character-jy1tbdyay2a8xeil.jpg",
+  Cinnamoroll:"https://4kwallpapers.com/images/wallpapers/cinnamoroll-5k-cute-5120x5120-11712.png"
 };
 
-let time=25*60, timer=null;
+let data=JSON.parse(localStorage.getItem("pochacco"))||{};
+let user=JSON.parse(localStorage.getItem("user"))||{name:"",avatar:""};
+let settings=JSON.parse(localStorage.getItem("settings"))||{
+  bg:"#e9fff2",
+  text:"#000000",
+  character:"Pochacco"
+};
+
+let time=25*60;
+let timer=null;
+
+const themes=[
+  {name:"light green",bg:"#e9fff2"},
+  {name:"light blue",bg:"#eaf4ff"},
+  {name:"light purple",bg:"#f3eaff"},
+  {name:"light pink",bg:"#ffeaf4"},
+  {name:"light gray",bg:"#f2f2f2"},
+  {name:"black",bg:"#000000"},
+  {name:"dark purple",bg:"#2b153f"},
+  {name:"dark green",bg:"#0f2f1f"},
+  {name:"dark blue",bg:"#0b1d3a"}
+];
 
 function saveAll(){
   localStorage.setItem("pochacco",JSON.stringify(data));
@@ -134,7 +173,7 @@ function saveAll(){
 
 function applyTheme(){
   document.documentElement.style.setProperty("--bg",settings.bg);
-  document.documentElement.style.setProperty("--text",settings.text);
+  document.documentElement.style.setProperty("--text","#000000");
 }
 applyTheme();
 
@@ -143,7 +182,7 @@ function home(){
   app.innerHTML=`
     <div class="topbar">
       <button onclick="settingsPage()">⚙ settings</button>
-      <div style="display:flex;gap:6px;align-items:center">
+      <div>
         ${user.avatar?`<img src="${user.avatar}" style="width:32px;height:32px;border-radius:50%">`:""}
         ${user.name}
       </div>
@@ -164,6 +203,10 @@ function home(){
     ${Object.keys(data).map(s=>`
       <div class="subject" onclick="openSubject('${s}')">${s}</div>
     `).join("")}
+
+    ${characterImages[settings.character]
+      ? `<img class="character-img" src="${characterImages[settings.character]}">`
+      : ""}
   `;
 }
 
@@ -184,11 +227,11 @@ function settingsPage(tab="profile"){
         onchange="uploadAvatar(this.files[0])">
     `:`
       ${themes.map(t=>`
-        <div class="theme" style="background:${t.bg};color:#000"
+        <div class="theme" style="background:${t.bg}"
           onclick="setTheme('${t.bg}')">${t.name}</div>
       `).join("")}
 
-      ${["Pochacco","Kuromi","Cinnamoroll","Keroppi"].map(c=>`
+      ${Object.keys(characterImages).map(c=>`
         <button onclick="settings.character='${c}';saveAll();settingsPage('custom')">${c}</button>
       `).join("")}
     `}
@@ -202,21 +245,8 @@ function uploadAvatar(file){
   r.readAsDataURL(file);
 }
 
-const themes=[
-  {name:"light green",bg:"#e9fff2"},
-  {name:"light blue",bg:"#eaf4ff"},
-  {name:"light purple",bg:"#f3eaff"},
-  {name:"light pink",bg:"#ffeaf4"},
-  {name:"light gray",bg:"#f2f2f2"},
-  {name:"black",bg:"#000000"},
-  {name:"dark purple",bg:"#2b153f"},
-  {name:"dark green",bg:"#0f2f1f"},
-  {name:"dark blue",bg:"#0b1d3a"}
-];
-
 function setTheme(bg){
   settings.bg=bg;
-  settings.text="#000000";
   saveAll();applyTheme();settingsPage("custom");
 }
 
@@ -242,8 +272,7 @@ function openSubject(s){
     `).join("")}
 
     <div>📝 notes</div>
-    <textarea rows="4"
-      oninput="subjNotes('${s}',this.value)">${subj.notes}</textarea>
+    <textarea rows="4" oninput="saveNotes('${s}',this.value)">${subj.notes}</textarea>
 
     <div>tasks</div>
     <input id="taskText">
@@ -260,38 +289,24 @@ function openSubject(s){
     `).join("")}
 
     <button onclick="home()">← back</button>
+
+    ${characterImages[settings.character]
+      ? `<img class="character-img" src="${characterImages[settings.character]}">`
+      : ""}
   `;
 }
 
-function subjNotes(s,v){ data[s].notes=v; saveAll(); }
-
+function saveNotes(s,v){data[s].notes=v;saveAll();}
 function addTask(s){
   const t=document.getElementById("taskText").value;
   if(!t)return;
   data[s].tasks.push({text:t,done:false});
   saveAll();openSubject(s);
 }
-
-function toggle(s,i){
-  data[s].tasks[i].done=!data[s].tasks[i].done;
-  saveAll();openSubject(s);
-}
-
-function deleteTask(s,i){
-  data[s].tasks.splice(i,1);
-  saveAll();openSubject(s);
-}
-
-function pinTask(s,i){
-  const task=data[s].tasks.splice(i,1)[0];
-  data[s].pins.push(task);
-  saveAll();openSubject(s);
-}
-
-function deletePinned(s,i){
-  data[s].pins.splice(i,1);
-  saveAll();openSubject(s);
-}
+function toggle(s,i){data[s].tasks[i].done=!data[s].tasks[i].done;saveAll();openSubject(s);}
+function deleteTask(s,i){data[s].tasks.splice(i,1);saveAll();openSubject(s);}
+function pinTask(s,i){data[s].pins.push(data[s].tasks.splice(i,1)[0]);saveAll();openSubject(s);}
+function deletePinned(s,i){data[s].pins.splice(i,1);saveAll();openSubject(s);}
 
 function addInbox(){
   if(!data.Inbox)data.Inbox={tasks:[],pins:[],notes:""};
