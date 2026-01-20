@@ -2,14 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pochacco Focus 🐾</title>
+<title>Focus App</title>
 <link href="https://fonts.googleapis.com/css2?family=Hubballi&display=swap" rel="stylesheet">
 
 <style>
+:root {
+  --bg: #e9fff2;
+  --card: #ffffff;
+  --accent: #4fbf90;
+  --text: #2b2b2b;
+}
+
 body {
   margin: 0;
   font-family: 'Hubballi', sans-serif;
-  background: linear-gradient(135deg, #e9fff2, #f4fff9);
+  background: var(--bg);
+  color: var(--text);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -17,7 +25,7 @@ body {
 }
 
 .card {
-  background: white;
+  background: var(--card);
   width: 390px;
   padding: 18px;
   border-radius: 22px;
@@ -27,26 +35,19 @@ body {
   overflow-y: auto;
 }
 
-h1 {
-  text-align:center;
-  color:#4fbf90;
-  margin:0;
+.topbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
-.sub {
-  text-align:center;
-  font-size:13px;
-  color:#7ac7a6;
-  margin-bottom:10px;
-}
-
-input, textarea, select, button {
-  font-family:'Hubballi',sans-serif;
+button, input, textarea, select {
   width:100%;
   padding:8px;
   margin:5px 0;
   border-radius:14px;
   border:1px solid #bfead3;
+  font-family:inherit;
 }
 
 button {
@@ -55,77 +56,36 @@ button {
   cursor:pointer;
 }
 
-button:hover {
-  background:#8fd9b6;
-}
+button:hover { background:#8fd9b6; }
 
-.subject {
-  background:#eafff3;
-  padding:8px;
-  border-radius:14px;
-  margin:6px 0;
-  text-align:center;
-  cursor:pointer;
-}
-
-.task {
+.subject, .task {
   background:#f2fff8;
-  border-radius:12px;
   padding:8px;
+  border-radius:12px;
   margin:6px 0;
 }
 
 .task.done {
-  opacity: 0.5;
-  text-decoration: line-through;
+  opacity:0.5;
+  text-decoration:line-through;
 }
 
-.tag {
-  font-size:11px;
-  color:#4fbf90;
-  margin-right:4px;
-}
-
-.pinned {
-  background:#e3fff1;
-  border-left:4px solid #4fbf90;
-  padding:6px;
-  margin:5px 0;
-}
-
-.timer {
-  text-align:center;
-  margin:10px 0;
-}
-
-.time {
-  font-size:32px;
-  color:#4fbf90;
-}
-
-.peace {
-  text-align:center;
-  margin-top:12px;
-}
-
-.paws {
+.tab {
   display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-top:6px;
+  gap:8px;
+  margin-bottom:10px;
 }
 
-.paw {
-  width:36px;
-  height:36px;
-  background:#c9f2dc;
-  border-radius:50%;
+.tab button {
+  flex:1;
+}
+
+.theme {
+  padding:10px;
+  border-radius:12px;
+  margin:6px 0;
   cursor:pointer;
-  transition:transform .1s;
-}
-
-.paw:active {
-  transform:scale(0.75);
+  text-align:center;
 }
 </style>
 </head>
@@ -133,215 +93,170 @@ button:hover {
 <body>
 <div class="card" id="app"></div>
 
+<audio id="alarm" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
 <script>
 let data = JSON.parse(localStorage.getItem("pochacco")) || {};
+let user = JSON.parse(localStorage.getItem("user")) || { name:"", avatar:"" };
+let settings = JSON.parse(localStorage.getItem("settings")) || {
+  bg:"#e9fff2",
+  text:"#2b2b2b",
+  character:"Pochacco"
+};
 
-// timer
-let defaultMinutes = 25;
-let time = defaultMinutes * 60;
+let time = 25*60;
 let timer = null;
-let sessions = 0;
 
-function save() {
-  localStorage.setItem("pochacco", JSON.stringify(data));
+function saveAll() {
+  localStorage.setItem("pochacco",JSON.stringify(data));
+  localStorage.setItem("user",JSON.stringify(user));
+  localStorage.setItem("settings",JSON.stringify(settings));
 }
 
-// ALARM SOUND
-function playAlarm() {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.type = "sine";
-  osc.frequency.value = 880;
-  gain.gain.value = 0.1;
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.start();
-  setTimeout(() => {
-    osc.stop();
-    ctx.close();
-  }, 800);
+function applyTheme() {
+  document.documentElement.style.setProperty("--bg", settings.bg);
+  document.documentElement.style.setProperty("--text", settings.text);
 }
+applyTheme();
 
-// HOME
 function home() {
   const app = document.getElementById("app");
   app.innerHTML = `
-    <h1>🐾 Pochacco Focus</h1>
-    <div class="sub">focus. rest. squish.</div>
-
-    <input id="quickTask" placeholder="quick task + #tags 🍃">
-    <button onclick="addInboxTask()">add task</button>
-
-    <div class="timer">
-      <div class="sub">focus time (minutes)</div>
-      <input type="number" min="1" placeholder="25" id="customTime">
-      <button onclick="setCustomTime()">set time</button>
-
-      <div class="time" id="time">${formatTime()}</div>
-      <button onclick="start()">start</button>
-      <button onclick="reset()">reset</button>
-      <div>sessions completed: ${sessions}</div>
+  <div class="topbar">
+    <button onclick="settingsPage()">⚙ settings</button>
+    <div style="display:flex;gap:6px;align-items:center">
+      ${user.avatar ? `<img src="${user.avatar}" style="width:32px;height:32px;border-radius:50%">` : ""}
+      ${user.name}
     </div>
+  </div>
 
-    <button onclick="newSubject()">➕ add subject</button>
-    ${Object.keys(data).map(s=>`
-      <div class="subject" onclick="openSubject('${s}')">${s}</div>
-    `).join("")}
+  <h1>🐾 ${settings.character} Focus</h1>
+
+  <input id="quickTask" placeholder="quick task">
+  <button onclick="addInbox()">add</button>
+
+  <div>
+    <div id="time">${format()}</div>
+    <button onclick="start()">start</button>
+    <button onclick="reset()">reset</button>
+  </div>
+
+  <button onclick="newSubject()">➕ subject</button>
+  ${Object.keys(data).map(s=>`<div class="subject" onclick="openSubject('${s}')">${s}</div>`).join("")}
   `;
 }
 
-// CUSTOM TIME
-function setCustomTime() {
-  const minutes = parseInt(document.getElementById("customTime").value);
-  if (!minutes || minutes <= 0) return;
-  defaultMinutes = minutes;
-  reset();
-}
-
-// SUBJECT PAGE
-function openSubject(s) {
-  const subj = data[s];
+function settingsPage(tab="profile") {
   const app = document.getElementById("app");
   app.innerHTML = `
+    <button onclick="home()">← back</button>
+    <div class="tab">
+      <button onclick="settingsPage('profile')">profile</button>
+      <button onclick="settingsPage('custom')">customization</button>
+    </div>
+
+    ${tab==="profile" ? `
+      ${user.avatar ? `<img src="${user.avatar}" style="width:80px;height:80px;border-radius:50%">` : ""}
+      <input placeholder="username" value="${user.name}" oninput="user.name=this.value;saveAll()">
+      <input type="file" accept="image/*" onchange="uploadAvatar(this.files[0])">
+    ` : `
+      <div>background</div>
+      ${themes.map(t=>`
+        <div class="theme" style="background:${t.bg};color:${t.text}"
+          onclick="setTheme('${t.bg}','${t.text}')">${t.name}</div>
+      `).join("")}
+
+      <div>character</div>
+      ${["Pochacco","Kuromi","Cinnamoroll","Keroppi"].map(c=>`
+        <button onclick="settings.character='${c}';saveAll();settingsPage('custom')">${c}</button>
+      `).join("")}
+    `}
+  `;
+}
+
+function uploadAvatar(file) {
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = ()=>{ user.avatar=r.result; saveAll(); settingsPage(); };
+  r.readAsDataURL(file);
+}
+
+const themes = [
+  {name:"light green",bg:"#e9fff2",text:"#2b2b2b"},
+  {name:"light blue",bg:"#eaf4ff",text:"#2b2b2b"},
+  {name:"light purple",bg:"#f3eaff",text:"#2b2b2b"},
+  {name:"light pink",bg:"#ffeaf4",text:"#2b2b2b"},
+  {name:"light gray",bg:"#f2f2f2",text:"#2b2b2b"},
+  {name:"black",bg:"#000",text:"#fff"},
+  {name:"dark purple",bg:"#2b153f",text:"#fff"},
+  {name:"dark green",bg:"#0f2f1f",text:"#fff"},
+  {name:"dark blue",bg:"#0b1d3a",text:"#fff"}
+];
+
+function setTheme(bg,text) {
+  settings.bg=bg; settings.text=text;
+  saveAll(); applyTheme(); settingsPage("custom");
+}
+
+function newSubject() {
+  const n = prompt("subject name");
+  if(!n) return;
+  data[n]={tasks:[]};
+  saveAll(); home();
+}
+
+function openSubject(s) {
+  const app=document.getElementById("app");
+  app.innerHTML=`
     <h1>${s}</h1>
-
-    <div class="sub">pinned</div>
-    ${subj.pins.map((p,i)=>`
-      <div class="pinned">
-        ${p}
-        <button onclick="delPin('${s}',${i})">✖</button>
-      </div>
-    `).join("")}
-    <input id="pinText" placeholder="add pinned note">
-    <button onclick="addPin('${s}')">pin</button>
-
-    <div class="sub">notes</div>
-    <textarea rows="4" oninput="saveNotes('${s}',this.value)">${subj.notes}</textarea>
-
-    <div class="sub">tasks</div>
-    <input id="taskText" placeholder="task + #tags">
-    <input type="date" id="taskDate">
+    <input id="taskText">
     <button onclick="addTask('${s}')">add task</button>
-
-    ${subj.tasks.map((t,i)=>`
-      <div class="task ${t.done ? "done" : ""}">
-        <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleDone('${s}',${i})">
+    ${data[s].tasks.map((t,i)=>`
+      <div class="task ${t.done?"done":""}">
+        <input type="checkbox" ${t.done?"checked":""} onchange="toggle('${s}',${i})">
         ${t.text}
-        <div>${t.tags.map(tag=>`<span class="tag">#${tag}</span>`).join("")}</div>
-        ${t.date || ""}
-        <button onclick="moveTask('${s}',${i},-1)">▲</button>
-        <button onclick="moveTask('${s}',${i},1)">▼</button>
-        <button onclick="delTask('${s}',${i})">✖</button>
       </div>
     `).join("")}
-
     <button onclick="home()">← back</button>
   `;
 }
 
-// SUBJECT LOGIC
-function newSubject() {
-  const name = prompt("subject name");
-  if (!name) return;
-  data[name] = { tasks:[], notes:"", pins:[] };
-  save();
-  home();
+function addTask(s){
+  const t=document.getElementById("taskText").value;
+  if(!t) return;
+  data[s].tasks.push({text:t,done:false});
+  saveAll(); openSubject(s);
 }
 
-function addPin(s) {
-  const text = document.getElementById("pinText").value;
-  if (!text) return;
-  data[s].pins.push(text);
-  save();
-  openSubject(s);
+function toggle(s,i){
+  data[s].tasks[i].done=!data[s].tasks[i].done;
+  saveAll(); openSubject(s);
 }
 
-function delPin(s,i) {
-  data[s].pins.splice(i,1);
-  save();
-  openSubject(s);
+function addInbox(){
+  if(!data.Inbox) data.Inbox={tasks:[]};
+  const t=document.getElementById("quickTask").value;
+  if(!t) return;
+  data.Inbox.tasks.push({text:t,done:false});
+  saveAll(); home();
 }
 
-function saveNotes(s,v) {
-  data[s].notes = v;
-  save();
-}
-
-function addTask(s) {
-  const text = document.getElementById("taskText").value;
-  const date = document.getElementById("taskDate").value;
-  if (!text) return;
-  const tags = text.match(/#\w+/g)?.map(t=>t.slice(1)) || [];
-  data[s].tasks.push({ text, date, tags, done:false });
-  save();
-  openSubject(s);
-}
-
-function delTask(s,i) {
-  data[s].tasks.splice(i,1);
-  save();
-  openSubject(s);
-}
-
-function toggleDone(s,i) {
-  data[s].tasks[i].done = !data[s].tasks[i].done;
-  save();
-  openSubject(s);
-}
-
-function moveTask(s,i,dir) {
-  const arr = data[s].tasks;
-  const ni = i + dir;
-  if (ni < 0 || ni >= arr.length) return;
-  [arr[i], arr[ni]] = [arr[ni], arr[i]];
-  save();
-  openSubject(s);
-}
-
-// QUICK TASK
-function addInboxTask() {
-  const text = document.getElementById("quickTask").value;
-  if (!text) return;
-  if (!data["Inbox"]) data["Inbox"] = { tasks:[], notes:"", pins:[] };
-  const tags = text.match(/#\w+/g)?.map(t=>t.slice(1)) || [];
-  data["Inbox"].tasks.push({ text, date:"", tags, done:false });
-  save();
-  document.getElementById("quickTask").value = "";
-}
-
-// TIMER
-function start() {
-  if (timer) return;
-  timer = setInterval(()=>{
+function start(){
+  if(timer) return;
+  timer=setInterval(()=>{
     time--;
-    document.getElementById("time").textContent = formatTime();
-    if (time === 0) {
+    document.getElementById("time").textContent=format();
+    if(time===0){
       clearInterval(timer);
-      timer = null;
-      sessions++;
-      playAlarm();
-      time = defaultMinutes * 60;
-      home();
+      timer=null;
+      document.getElementById("alarm").play();
+      time=25*60;
     }
   },1000);
 }
 
-function reset() {
-  clearInterval(timer);
-  timer = null;
-  time = defaultMinutes * 60;
-  home();
-}
-
-function formatTime() {
-  const m = Math.floor(time/60);
-  const s = time%60;
-  return `${m}:${s.toString().padStart(2,"0")}`;
-}
+function reset(){ clearInterval(timer); timer=null; time=25*60; home(); }
+function format(){ return Math.floor(time/60)+":"+String(time%60).padStart(2,"0"); }
 
 home();
 </script>
