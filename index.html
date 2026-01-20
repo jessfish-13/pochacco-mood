@@ -7,32 +7,32 @@
 
 <style>
 :root {
-  --bg: #e9fff2;
-  --card: #ffffff;
-  --accent: #4fbf90;
-  --text: #2b2b2b;
+  --bg:#e9fff2;
+  --card:#ffffff;
+  --accent:#4fbf90;
+  --text:#000000;
 }
 
 body {
-  margin: 0;
-  font-family: 'Hubballi', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  margin:0;
+  font-family:'Hubballi',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
 }
 
 .card {
-  background: var(--card);
-  width: 390px;
-  padding: 18px;
-  border-radius: 22px;
-  border: 3px solid #c9f2dc;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-  max-height: 92vh;
-  overflow-y: auto;
+  background:var(--card);
+  width:390px;
+  padding:18px;
+  border-radius:22px;
+  border:3px solid #c9f2dc;
+  box-shadow:0 12px 30px rgba(0,0,0,0.08);
+  max-height:92vh;
+  overflow-y:auto;
 }
 
 .topbar {
@@ -41,7 +41,7 @@ body {
   align-items:center;
 }
 
-button, input, textarea, select {
+button,input,textarea {
   width:100%;
   padding:8px;
   margin:5px 0;
@@ -58,7 +58,7 @@ button {
 
 button:hover { background:#8fd9b6; }
 
-.subject, .task {
+.subject,.task,.pin {
   background:#f2fff8;
   padding:8px;
   border-radius:12px;
@@ -70,15 +70,20 @@ button:hover { background:#8fd9b6; }
   text-decoration:line-through;
 }
 
+.pin {
+  background:#e3fff1;
+  border-left:4px solid #4fbf90;
+}
+
+textarea { resize:none; }
+
 .tab {
   display:flex;
   gap:8px;
   margin-bottom:10px;
 }
 
-.tab button {
-  flex:1;
-}
+.tab button { flex:1; }
 
 .theme {
   padding:10px;
@@ -99,74 +104,73 @@ button:hover { background:#8fd9b6; }
 let data = JSON.parse(localStorage.getItem("pochacco")) || {};
 let user = JSON.parse(localStorage.getItem("user")) || { name:"", avatar:"" };
 let settings = JSON.parse(localStorage.getItem("settings")) || {
-  bg:"#e9fff2",
-  text:"#2b2b2b",
-  character:"Pochacco"
+  bg:"#e9fff2", text:"#000000", character:"Pochacco"
 };
 
-let time = 25*60;
-let timer = null;
+let time=25*60, timer=null;
 
-function saveAll() {
+function saveAll(){
   localStorage.setItem("pochacco",JSON.stringify(data));
   localStorage.setItem("user",JSON.stringify(user));
   localStorage.setItem("settings",JSON.stringify(settings));
 }
 
-function applyTheme() {
-  document.documentElement.style.setProperty("--bg", settings.bg);
-  document.documentElement.style.setProperty("--text", settings.text);
+function applyTheme(){
+  document.documentElement.style.setProperty("--bg",settings.bg);
+  document.documentElement.style.setProperty("--text",settings.text);
 }
 applyTheme();
 
-function home() {
-  const app = document.getElementById("app");
-  app.innerHTML = `
-  <div class="topbar">
-    <button onclick="settingsPage()">⚙ settings</button>
-    <div style="display:flex;gap:6px;align-items:center">
-      ${user.avatar ? `<img src="${user.avatar}" style="width:32px;height:32px;border-radius:50%">` : ""}
-      ${user.name}
+function home(){
+  const app=document.getElementById("app");
+  app.innerHTML=`
+    <div class="topbar">
+      <button onclick="settingsPage()">⚙ settings</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        ${user.avatar?`<img src="${user.avatar}" style="width:32px;height:32px;border-radius:50%">`:""}
+        ${user.name}
+      </div>
     </div>
-  </div>
 
-  <h1>🐾 ${settings.character} Focus</h1>
+    <h1>🐾 ${settings.character} Focus</h1>
 
-  <input id="quickTask" placeholder="quick task">
-  <button onclick="addInbox()">add</button>
+    <input id="quickTask" placeholder="quick task">
+    <button onclick="addInbox()">add</button>
 
-  <div>
-    <div id="time">${format()}</div>
-    <button onclick="start()">start</button>
-    <button onclick="reset()">reset</button>
-  </div>
+    <div>
+      <div id="time">${format()}</div>
+      <button onclick="start()">start</button>
+      <button onclick="reset()">reset</button>
+    </div>
 
-  <button onclick="newSubject()">➕ subject</button>
-  ${Object.keys(data).map(s=>`<div class="subject" onclick="openSubject('${s}')">${s}</div>`).join("")}
+    <button onclick="newSubject()">➕ subject</button>
+    ${Object.keys(data).map(s=>`
+      <div class="subject" onclick="openSubject('${s}')">${s}</div>
+    `).join("")}
   `;
 }
 
-function settingsPage(tab="profile") {
-  const app = document.getElementById("app");
-  app.innerHTML = `
+function settingsPage(tab="profile"){
+  const app=document.getElementById("app");
+  app.innerHTML=`
     <button onclick="home()">← back</button>
     <div class="tab">
       <button onclick="settingsPage('profile')">profile</button>
       <button onclick="settingsPage('custom')">customization</button>
     </div>
 
-    ${tab==="profile" ? `
-      ${user.avatar ? `<img src="${user.avatar}" style="width:80px;height:80px;border-radius:50%">` : ""}
-      <input placeholder="username" value="${user.name}" oninput="user.name=this.value;saveAll()">
-      <input type="file" accept="image/*" onchange="uploadAvatar(this.files[0])">
-    ` : `
-      <div>background</div>
+    ${tab==="profile"?`
+      ${user.avatar?`<img src="${user.avatar}" style="width:80px;height:80px;border-radius:50%">`:""}
+      <input placeholder="username" value="${user.name}"
+        oninput="user.name=this.value;saveAll()">
+      <input type="file" accept="image/*"
+        onchange="uploadAvatar(this.files[0])">
+    `:`
       ${themes.map(t=>`
-        <div class="theme" style="background:${t.bg};color:${t.text}"
-          onclick="setTheme('${t.bg}','${t.text}')">${t.name}</div>
+        <div class="theme" style="background:${t.bg};color:#000"
+          onclick="setTheme('${t.bg}')">${t.name}</div>
       `).join("")}
 
-      <div>character</div>
       ${["Pochacco","Kuromi","Cinnamoroll","Keroppi"].map(c=>`
         <button onclick="settings.character='${c}';saveAll();settingsPage('custom')">${c}</button>
       `).join("")}
@@ -174,75 +178,108 @@ function settingsPage(tab="profile") {
   `;
 }
 
-function uploadAvatar(file) {
-  if(!file) return;
-  const r = new FileReader();
-  r.onload = ()=>{ user.avatar=r.result; saveAll(); settingsPage(); };
+function uploadAvatar(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{user.avatar=r.result;saveAll();settingsPage();};
   r.readAsDataURL(file);
 }
 
-const themes = [
-  {name:"light green",bg:"#e9fff2",text:"#2b2b2b"},
-  {name:"light blue",bg:"#eaf4ff",text:"#2b2b2b"},
-  {name:"light purple",bg:"#f3eaff",text:"#2b2b2b"},
-  {name:"light pink",bg:"#ffeaf4",text:"#2b2b2b"},
-  {name:"light gray",bg:"#f2f2f2",text:"#2b2b2b"},
-  {name:"black",bg:"#000",text:"#fff"},
-  {name:"dark purple",bg:"#2b153f",text:"#fff"},
-  {name:"dark green",bg:"#0f2f1f",text:"#fff"},
-  {name:"dark blue",bg:"#0b1d3a",text:"#fff"}
+const themes=[
+  {name:"light green",bg:"#e9fff2"},
+  {name:"light blue",bg:"#eaf4ff"},
+  {name:"light purple",bg:"#f3eaff"},
+  {name:"light pink",bg:"#ffeaf4"},
+  {name:"light gray",bg:"#f2f2f2"},
+  {name:"black",bg:"#000000"},
+  {name:"dark purple",bg:"#2b153f"},
+  {name:"dark green",bg:"#0f2f1f"},
+  {name:"dark blue",bg:"#0b1d3a"}
 ];
 
-function setTheme(bg,text) {
-  settings.bg=bg; settings.text=text;
-  saveAll(); applyTheme(); settingsPage("custom");
+function setTheme(bg){
+  settings.bg=bg;
+  settings.text="#000000";
+  saveAll();applyTheme();settingsPage("custom");
 }
 
-function newSubject() {
-  const n = prompt("subject name");
-  if(!n) return;
-  data[n]={tasks:[]};
-  saveAll(); home();
+function newSubject(){
+  const n=prompt("subject name");
+  if(!n)return;
+  data[n]={tasks:[],pins:[],notes:""};
+  saveAll();home();
 }
 
-function openSubject(s) {
+function openSubject(s){
+  const subj=data[s];
   const app=document.getElementById("app");
   app.innerHTML=`
     <h1>${s}</h1>
-    <input id="taskText">
-    <button onclick="addTask('${s}')">add task</button>
-    ${data[s].tasks.map((t,i)=>`
-      <div class="task ${t.done?"done":""}">
-        <input type="checkbox" ${t.done?"checked":""} onchange="toggle('${s}',${i})">
-        ${t.text}
+
+    <div>📌 pinned tasks</div>
+    ${subj.pins.map((p,i)=>`
+      <div class="pin">
+        ${p.text}
+        <button onclick="deletePinned('${s}',${i})">✖</button>
       </div>
     `).join("")}
+
+    <div>📝 notes</div>
+    <textarea rows="4"
+      oninput="subjNotes('${s}',this.value)">${subj.notes}</textarea>
+
+    <div>tasks</div>
+    <input id="taskText">
+    <button onclick="addTask('${s}')">add task</button>
+
+    ${subj.tasks.map((t,i)=>`
+      <div class="task ${t.done?"done":""}">
+        <input type="checkbox" ${t.done?"checked":""}
+          onchange="toggle('${s}',${i})">
+        ${t.text}
+        <button onclick="pinTask('${s}',${i})">📌</button>
+      </div>
+    `).join("")}
+
     <button onclick="home()">← back</button>
   `;
 }
 
+function subjNotes(s,v){ data[s].notes=v; saveAll(); }
+
 function addTask(s){
   const t=document.getElementById("taskText").value;
-  if(!t) return;
+  if(!t)return;
   data[s].tasks.push({text:t,done:false});
-  saveAll(); openSubject(s);
+  saveAll();openSubject(s);
 }
 
 function toggle(s,i){
   data[s].tasks[i].done=!data[s].tasks[i].done;
-  saveAll(); openSubject(s);
+  saveAll();openSubject(s);
+}
+
+function pinTask(s,i){
+  const task=data[s].tasks.splice(i,1)[0];
+  data[s].pins.push(task);
+  saveAll();openSubject(s);
+}
+
+function deletePinned(s,i){
+  data[s].pins.splice(i,1);
+  saveAll();openSubject(s);
 }
 
 function addInbox(){
-  if(!data.Inbox) data.Inbox={tasks:[]};
+  if(!data.Inbox)data.Inbox={tasks:[],pins:[],notes:""};
   const t=document.getElementById("quickTask").value;
-  if(!t) return;
+  if(!t)return;
   data.Inbox.tasks.push({text:t,done:false});
-  saveAll(); home();
+  saveAll();home();
 }
 
 function start(){
-  if(timer) return;
+  if(timer)return;
   timer=setInterval(()=>{
     time--;
     document.getElementById("time").textContent=format();
@@ -255,8 +292,8 @@ function start(){
   },1000);
 }
 
-function reset(){ clearInterval(timer); timer=null; time=25*60; home(); }
-function format(){ return Math.floor(time/60)+":"+String(time%60).padStart(2,"0"); }
+function reset(){clearInterval(timer);timer=null;time=25*60;home();}
+function format(){return Math.floor(time/60)+":"+String(time%60).padStart(2,"0");}
 
 home();
 </script>
