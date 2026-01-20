@@ -63,6 +63,7 @@ button:hover { background:#8fd9b6; }
   padding:8px;
   border-radius:12px;
   margin:6px 0;
+  position:relative;
 }
 
 .task.done {
@@ -75,7 +76,19 @@ button:hover { background:#8fd9b6; }
   border-left:4px solid #4fbf90;
 }
 
-textarea { resize:none; }
+textarea {
+  resize: both;
+}
+
+.task .delete {
+  position:absolute;
+  top:4px;
+  right:6px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-size:14px;
+}
 
 .tab {
   display:flex;
@@ -234,6 +247,7 @@ function openSubject(s){
 
     ${subj.tasks.map((t,i)=>`
       <div class="task ${t.done?"done":""}">
+        <button class="delete" onclick="deleteTask('${s}',${i})">✖</button>
         <input type="checkbox" ${t.done?"checked":""}
           onchange="toggle('${s}',${i})">
         ${t.text}
@@ -256,6 +270,11 @@ function addTask(s){
 
 function toggle(s,i){
   data[s].tasks[i].done=!data[s].tasks[i].done;
+  saveAll();openSubject(s);
+}
+
+function deleteTask(s,i){
+  data[s].tasks.splice(i,1);
   saveAll();openSubject(s);
 }
 
