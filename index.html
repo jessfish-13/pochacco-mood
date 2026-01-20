@@ -203,7 +203,12 @@ function openSubject(s) {
     <h1>${s}</h1>
 
     <div class="sub">pinned</div>
-    ${subj.pins.map(p=>`<div class="pinned">${p}</div>`).join("")}
+    ${subj.pins.map((p,i)=>`
+      <div class="pinned">
+        ${p}
+        <button onclick="delPin('${s}',${i})">✖</button>
+      </div>
+    `).join("")}
     <input id="pinText" placeholder="add pinned note">
     <button onclick="addPin('${s}')">pin</button>
 
@@ -241,6 +246,12 @@ function addPin(s) {
   const text = document.getElementById("pinText").value;
   if (!text) return;
   data[s].pins.push(text);
+  save();
+  openSubject(s);
+}
+
+function delPin(s,i) {
+  data[s].pins.splice(i,1);
   save();
   openSubject(s);
 }
