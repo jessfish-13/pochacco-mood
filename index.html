@@ -132,10 +132,10 @@ button:hover { background:#8fd9b6; }
 
 <script>
 const characterImages = {
-  Pochacco: "images/pochacco2.png",
+  Pochacco: "images/pochacco.png",
   Kuromi: "images/kuromi.png",
   Keroppi: "images/keroppi.png",
-  Cinnamoroll: "images/cinnamoroll2.png"
+  Cinnamoroll: "images/cinnamoroll.png"
 };
 
 let data = JSON.parse(localStorage.getItem("pochacco")) || {};
@@ -146,7 +146,9 @@ let settings = JSON.parse(localStorage.getItem("settings")) || {
   character:"Pochacco"
 };
 
-let time = 25 * 60;
+/* ✅ CUSTOM TIMER VARIABLES */
+let defaultMinutes = 25;
+let time = defaultMinutes * 60;
 let timer = null;
 
 function saveAll(){
@@ -181,6 +183,13 @@ function home(){
     <button onclick="addInbox()">add</button>
 
     <div style="text-align:center;margin:10px 0">
+      <input 
+        id="customTime" 
+        type="number" 
+        min="1" 
+        placeholder="minutes (default 25)">
+      <button onclick="setCustomTime()">set time</button>
+
       <div id="time">${format()}</div>
       <button onclick="start()">start</button>
       <button onclick="reset()">reset</button>
@@ -191,6 +200,17 @@ function home(){
       <div class="subject" onclick="openSubject('${s}')">${s}</div>
     `).join("")}
   `;
+}
+
+/* ✅ CUSTOM TIMER FUNCTION */
+function setCustomTime(){
+  const input = document.getElementById("customTime");
+  const minutes = parseInt(input.value);
+  if(!minutes || minutes <= 0) return;
+
+  defaultMinutes = minutes;
+  time = defaultMinutes * 60;
+  document.getElementById("time").textContent = format();
 }
 
 function settingsPage(tab="profile"){
@@ -343,7 +363,7 @@ function start(){
       clearInterval(timer);
       timer=null;
       document.getElementById("alarm").play();
-      time=25*60;
+      time = defaultMinutes * 60;
     }
   },1000);
 }
@@ -351,7 +371,7 @@ function start(){
 function reset(){
   clearInterval(timer);
   timer=null;
-  time=25*60;
+  time = defaultMinutes * 60;
   home();
 }
 
