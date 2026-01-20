@@ -57,6 +57,7 @@ body {
 .mascot {
   width:64px;
   height:auto;
+  pointer-events:none; /* THIS is the fix */
 }
 
 button,input,textarea {
@@ -102,6 +103,22 @@ button:hover { background:#8fd9b6; }
   background:#e3fff1;
   border-left:4px solid #4fbf90;
 }
+
+.tab {
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.tab button { flex:1; }
+
+.theme {
+  padding:10px;
+  border-radius:12px;
+  margin:6px 0;
+  cursor:pointer;
+  text-align:center;
+}
 </style>
 </head>
 
@@ -124,7 +141,7 @@ let settings = JSON.parse(localStorage.getItem("settings")) || {
   bg:"#e9fff2",
   text:"#000000",
   character:"Pochacco",
-  focusMinutes: 25
+  focusMinutes:25
 };
 
 let time = settings.focusMinutes * 60;
@@ -166,8 +183,7 @@ function home(){
 
       <input type="number" min="1"
         value="${settings.focusMinutes}"
-        onchange="setFocusTime(this.value)"
-        placeholder="minutes">
+        onchange="setFocusTime(this.value)">
 
       <button onclick="start()">start</button>
       <button onclick="reset()">reset</button>
@@ -180,33 +196,33 @@ function home(){
   `;
 }
 
-function setFocusTime(val){
-  const mins = parseInt(val);
-  if(!mins || mins <= 0) return;
-  settings.focusMinutes = mins;
-  time = mins * 60;
+function setFocusTime(v){
+  const m=parseInt(v);
+  if(!m||m<=0)return;
+  settings.focusMinutes=m;
+  time=m*60;
   saveAll();
   home();
 }
 
 function start(){
-  if(timer) return;
-  timer = setInterval(()=>{
+  if(timer)return;
+  timer=setInterval(()=>{
     time--;
-    document.getElementById("time").textContent = format();
-    if(time === 0){
+    document.getElementById("time").textContent=format();
+    if(time===0){
       clearInterval(timer);
-      timer = null;
+      timer=null;
       document.getElementById("alarm").play();
-      time = settings.focusMinutes * 60;
+      time=settings.focusMinutes*60;
     }
   },1000);
 }
 
 function reset(){
   clearInterval(timer);
-  timer = null;
-  time = settings.focusMinutes * 60;
+  timer=null;
+  time=settings.focusMinutes*60;
   home();
 }
 
@@ -214,20 +230,85 @@ function format(){
   return Math.floor(time/60)+":"+String(time%60).padStart(2,"0");
 }
 
-/* rest unchanged */
 function newSubject(){
   const n=prompt("subject name");
   if(!n)return;
   data[n]={tasks:[],pins:[],notes:""};
-  saveAll(); home();
+  saveAll();
+  home();
 }
 
+function openSubject(s){
+  const subj=data[s];
+  const app=document.getElementById("app");
+  app.innerHTML=`
+    <h1>${s}</h1>
+
+    <div>📌 pinned tasks</div>
+    ${subj.pins.map((p,i)=>`
+      <div class="pin">
+        ${p.text}
+        <button onclick="deletePinned('${s}',${i})">✖</button>
+      </div>
+    `).join("")}
+
+    <div>📝 notes</div>
+    <textarea rows="4" oninput="subjNotes('${s}',this.value)">${subj.notes}</textarea>
+
+    <div>tasks</div>
+    <input id="taskText">
+    <button onclick="addTask('${s}')">add task</button>
+
+    ${subj.tasks.map((t,i)=>`
+      <div class="task ${t.done?"done":""}">
+        <button class="delete" onclick="deleteTask('${s}',${i})">✖</button>
+        <input type="checkbox" ${t.done?"checked":""}
+          onchange="toggle('${s}',${i})">
+        ${t.text}
+        <button onclick="pinTask('${s}',${i})">📌</button>
+      </div>
+    `).join("")}
+
+    <button onclick="home()">← back</button>
+  `;
+}
+
+function subjNotes(s,v){ data[s].notes=v; saveAll(); }
+function addTask(s){
+  const t=document.getElementById("taskText").value;
+  if(!t)return;
+  data[s].tasks.push({text:t,done:false});
+  saveAll();
+  openSubject(s);
+}
+function toggle(s,i){
+  data[s].tasks[i].done=!data[s].tasks[i].done;
+  saveAll();
+  openSubject(s);
+}
+function deleteTask(s,i){
+  data[s].tasks.splice(i,1);
+  saveAll();
+  openSubject(s);
+}
+function pinTask(s,i){
+  const task=data[s].tasks.splice(i,1)[0];
+  data[s].pins.push(task);
+  saveAll();
+  openSubject(s);
+}
+function deletePinned(s,i){
+  data[s].pins.splice(i,1);
+  saveAll();
+  openSubject(s);
+}
 function addInbox(){
   if(!data.Inbox)data.Inbox={tasks:[],pins:[],notes:""};
   const t=document.getElementById("quickTask").value;
   if(!t)return;
   data.Inbox.tasks.push({text:t,done:false});
-  saveAll(); home();
+  saveAll();
+  home();
 }
 
 home();
