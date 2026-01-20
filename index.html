@@ -75,6 +75,11 @@ button:hover {
   margin:6px 0;
 }
 
+.task.done {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
 .tag {
   font-size:11px;
   color:#4fbf90;
@@ -141,6 +146,26 @@ function save() {
   localStorage.setItem("pochacco", JSON.stringify(data));
 }
 
+// ALARM SOUND
+function playAlarm() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.value = 880;
+  gain.gain.value = 0.1;
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  setTimeout(() => {
+    osc.stop();
+    ctx.close();
+  }, 800);
+}
+
 // HOME
 function home() {
   const app = document.getElementById("app");
@@ -166,30 +191,12 @@ function home() {
     ${Object.keys(data).map(s=>`
       <div class="subject" onclick="openSubject('${s}')">${s}</div>
     `).join("")}
-
-    <select>
-      <option>how do you feel?</option>
-      <option>😊 good</option>
-      <option>😴 tired</option>
-      <option>🥺 low</option>
-      <option>😵 stressed</option>
-    </select>
-
-    <div class="peace">
-      peace corner 🌿
-      <div class="paws">
-        <div class="paw"></div>
-        <div class="paw"></div>
-        <div class="paw"></div>
-      </div>
-    </div>
   `;
 }
 
 // CUSTOM TIME
 function setCustomTime() {
-  const input = document.getElementById("customTime");
-  const minutes = parseInt(input.value);
+  const minutes = parseInt(document.getElementById("customTime").value);
   if (!minutes || minutes <= 0) return;
   defaultMinutes = minutes;
   reset();
@@ -221,10 +228,13 @@ function openSubject(s) {
     <button onclick="addTask('${s}')">add task</button>
 
     ${subj.tasks.map((t,i)=>`
-      <div class="task">
+      <div class="task ${t.done ? "done" : ""}">
+        <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleDone('${s}',${i})">
         ${t.text}
         <div>${t.tags.map(tag=>`<span class="tag">#${tag}</span>`).join("")}</div>
         ${t.date || ""}
+        <button onclick="moveTask('${s}',${i},-1)">▲</button>
+        <button onclick="moveTask('${s}',${i},1)">▼</button>
         <button onclick="delTask('${s}',${i})">✖</button>
       </div>
     `).join("")}
@@ -266,7 +276,7 @@ function addTask(s) {
   const date = document.getElementById("taskDate").value;
   if (!text) return;
   const tags = text.match(/#\w+/g)?.map(t=>t.slice(1)) || [];
-  data[s].tasks.push({ text, date, tags });
+  data[s].tasks.push({ text, date, tags, done:false });
   save();
   openSubject(s);
 }
@@ -277,13 +287,28 @@ function delTask(s,i) {
   openSubject(s);
 }
 
+function toggleDone(s,i) {
+  data[s].tasks[i].done = !data[s].tasks[i].done;
+  save();
+  openSubject(s);
+}
+
+function moveTask(s,i,dir) {
+  const arr = data[s].tasks;
+  const ni = i + dir;
+  if (ni < 0 || ni >= arr.length) return;
+  [arr[i], arr[ni]] = [arr[ni], arr[i]];
+  save();
+  openSubject(s);
+}
+
 // QUICK TASK
 function addInboxTask() {
   const text = document.getElementById("quickTask").value;
   if (!text) return;
   if (!data["Inbox"]) data["Inbox"] = { tasks:[], notes:"", pins:[] };
   const tags = text.match(/#\w+/g)?.map(t=>t.slice(1)) || [];
-  data["Inbox"].tasks.push({ text, date:"", tags });
+  data["Inbox"].tasks.push({ text, date:"", tags, done:false });
   save();
   document.getElementById("quickTask").value = "";
 }
@@ -298,6 +323,7 @@ function start() {
       clearInterval(timer);
       timer = null;
       sessions++;
+      playAlarm();
       time = defaultMinutes * 60;
       home();
     }
