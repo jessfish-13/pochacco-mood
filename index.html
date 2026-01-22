@@ -177,7 +177,11 @@ applyTheme();
 function home(){
   const app=document.getElementById("app");
 
-  const today = new Date().toISOString().slice(0,10);
+  const todayObj = new Date();
+  const today = todayObj.getFullYear() + '-' +
+              String(todayObj.getMonth()+1).padStart(2,'0') + '-' +
+              String(todayObj.getDate()).padStart(2,'0');
+
 
   const todayTasks = Object.entries(data).flatMap(([subject,subj]) =>
     subj.tasks
