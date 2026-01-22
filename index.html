@@ -154,7 +154,6 @@ let data = JSON.parse(localStorage.getItem("pochacco")) || {};
 let user = JSON.parse(localStorage.getItem("user")) || { name:"", avatar:"" };
 let settings = JSON.parse(localStorage.getItem("settings")) || {
   bg:"#e9fff2",
-  card:"#ffffff",
   text:"#000000",
   character:"Pochacco"
 };
@@ -172,12 +171,24 @@ function saveAll(){
 function applyTheme(){
   document.documentElement.style.setProperty("--bg",settings.bg);
   document.documentElement.style.setProperty("--text",settings.text);
-  if(settings.card) document.documentElement.style.setProperty("--card", settings.card);
 }
 applyTheme();
 
 function home(){
   const app=document.getElementById("app");
+
+  const today = new Date().toISOString().slice(0,10);
+
+  const todayTasks = Object.entries(data).flatMap(([subject,subj]) =>
+    subj.tasks
+      .filter(t => t.date === today && !t.done)
+      .map((t,i) => `
+        <div class="task">
+          ${t.text} <span class="date">(${subject})</span>
+        </div>
+      `)
+  ).join("");
+
   app.innerHTML=`
     <div class="topbar">
       <button onclick="settingsPage()">⚙ settings</button>
@@ -204,9 +215,15 @@ function home(){
     </div>
 
     <button onclick="newSubject()">➕ subject</button>
+
     ${Object.keys(data).map(s=>`
       <div class="subject" onclick="openSubject('${s}')">${s}</div>
     `).join("")}
+
+    <hr>
+
+    <h3>Today</h3>
+    ${todayTasks || `<div style="opacity:.6">no tasks due today</div>`}
   `;
 }
 
@@ -243,23 +260,8 @@ function settingsPage(tab="profile"){
       ${["Pochacco","Kuromi","Cinnamoroll","Keroppi"].map(c=>`
         <button onclick="settings.character='${c}';saveAll();settingsPage('custom')">${c}</button>
       `).join("")}
-
-      <!-- NEW CARD COLOR INPUT -->
-      <input id="customCard" placeholder="#ffffff for card">
-      <button onclick="setCardColor()">Set card color</button>
     `}
   `;
-}
-
-function setCardColor(){
-  const hex = document.getElementById("customCard").value.trim();
-  if(/^#[0-9A-Fa-f]{6}$/.test(hex)){
-    settings.card = hex;
-    document.documentElement.style.setProperty("--card", hex);
-    saveAll();
-  } else {
-    alert("Enter a valid hex code, e.g. #a1b2c3");
-  }
 }
 
 function uploadAvatar(file){
