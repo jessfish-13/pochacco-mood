@@ -103,10 +103,10 @@ button:hover { background:#8fd9b6; }
   border:none;
   cursor:pointer;
 }
+
 .task {
   padding-right:36px;
 }
-
 
 .task .date {
   font-size:12px;
@@ -176,6 +176,19 @@ applyTheme();
 
 function home(){
   const app=document.getElementById("app");
+
+  const today = new Date().toISOString().slice(0,10);
+
+  const todayTasks = Object.entries(data).flatMap(([subject,subj]) =>
+    subj.tasks
+      .filter(t => t.date === today && !t.done)
+      .map((t,i) => `
+        <div class="task">
+          ${t.text} <span class="date">(${subject})</span>
+        </div>
+      `)
+  ).join("");
+
   app.innerHTML=`
     <div class="topbar">
       <button onclick="settingsPage()">⚙ settings</button>
@@ -202,9 +215,15 @@ function home(){
     </div>
 
     <button onclick="newSubject()">➕ subject</button>
+
     ${Object.keys(data).map(s=>`
       <div class="subject" onclick="openSubject('${s}')">${s}</div>
     `).join("")}
+
+    <hr>
+
+    <h3>Today</h3>
+    ${todayTasks || `<div style="opacity:.6">no tasks due today</div>`}
   `;
 }
 
